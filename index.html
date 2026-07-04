@@ -1,1036 +1,1387 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Meal Plan" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Meal Plan"/>
   <title>Meal Plan — Fat Loss & Muscle</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Inter', sans-serif; background: #0F0F0F; color: #fff; min-height: 100vh; }
 
-    body {
-      font-family: -apple-system, 'Inter', sans-serif;
-      background: #0F0F0F;
-      color: #fff;
-      min-height: 100vh;
-      padding: 24px 16px 48px;
-    }
+    /* ── TAB NAVIGATION ── */
+    .tab-nav { position: sticky; top: 0; z-index: 100; background: #0F0F0F; border-bottom: 1px solid #1A1A1A; padding: 10px 12px 0; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .tab-nav::-webkit-scrollbar { display: none; }
+    .tab-btn { flex-shrink: 0; padding: 8px 12px; border-radius: 10px 10px 0 0; border: 1px solid #2A2A2A; border-bottom: none; background: #1A1A1A; color: #555; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.15s; text-align: center; min-width: 52px; }
+    .tab-btn.active { background: var(--day-color-bg, #222); color: var(--day-color, #fff); border-color: var(--day-color, #333); border-bottom: 1px solid var(--day-color-bg, #222); }
+    .tab-btn .day-name { font-size: 12px; font-weight: 800; }
+    .tab-btn .day-type { font-size: 9px; margin-top: 2px; opacity: 0.7; }
 
-    /* HEADER */
-    .header { text-align: center; margin-bottom: 28px; }
-    .header-label {
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      color: #555;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .header h1 {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-    .header p { color: #888; font-size: 13px; margin-top: 5px; }
+    /* ── PAGE ── */
+    .day-page { display: none; padding: 16px; }
+    .day-page.active { display: block; }
 
-    /* STATS ROW */
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-    .stat {
-      background: #1A1A1A;
-      border: 1px solid #2A2A2A;
-      border-radius: 12px;
-      padding: 10px 14px;
-      text-align: center;
-      min-width: 72px;
-    }
-    .stat-value { font-size: 18px; font-weight: 800; }
-    .stat-label { font-size: 10px; color: #555; margin-top: 2px; }
-    .stat-unit { font-size: 10px; color: #444; }
+    /* ── DAY HEADER ── */
+    .day-header { background: var(--day-color-bg); border: 1px solid var(--day-color-border); border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; }
+    .day-header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .day-emoji { font-size: 28px; }
+    .day-title { font-size: 20px; font-weight: 800; color: #fff; }
+    .day-subtitle { font-size: 12px; color: #888; margin-top: 2px; }
+    .day-badge { font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: var(--day-color-bg2); color: var(--day-color); border: 1px solid var(--day-color-border); white-space: nowrap; }
 
-    /* MEAL CARDS */
-    .meals { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    /* ── MACRO DASHBOARD ── */
+    .macro-dash { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 14px; padding: 14px; margin-bottom: 16px; }
+    .macro-dash-title { font-size: 10px; letter-spacing: 0.12em; color: #555; text-transform: uppercase; margin-bottom: 12px; }
+    .macro-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+    .macro-box { background: #222; border-radius: 10px; padding: 8px 4px; text-align: center; }
+    .macro-val { font-size: 17px; font-weight: 800; }
+    .macro-lbl { font-size: 9px; color: #555; margin-top: 2px; }
+    .progress-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+    .progress-label { font-size: 10px; color: #666; width: 58px; flex-shrink: 0; }
+    .progress-bar-bg { flex: 1; background: #2A2A2A; border-radius: 20px; height: 5px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; border-radius: 20px; transition: width 0.4s; }
+    .progress-val { font-size: 10px; font-weight: 700; width: 34px; text-align: right; flex-shrink: 0; }
 
-    .meal-card {
-      background: #1A1A1A;
-      border: 1px solid #2A2A2A;
-      border-radius: 16px;
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-    .meal-card.open { border-color: var(--meal-color-alpha); }
+    /* ── SECTION CARDS ── */
+    .section-card { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+    .section-card-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; }
+    .section-card-header-left { display: flex; align-items: center; gap: 10px; }
+    .section-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .section-title { font-size: 13px; font-weight: 700; color: #fff; }
+    .section-sub { font-size: 11px; color: #666; margin-top: 1px; }
+    .section-right { display: flex; align-items: center; gap: 8px; }
+    .section-cal { font-size: 13px; font-weight: 700; }
+    .section-arrow { color: #444; font-size: 15px; transition: transform 0.2s; }
+    .section-card.open .section-arrow { transform: rotate(180deg); }
+    .section-body { display: none; padding: 0 16px 16px; }
+    .section-card.open .section-body { display: block; }
+    .sdivider { height: 1px; background: #2A2A2A; margin-bottom: 12px; }
 
-    .meal-header {
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 14px 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-align: left;
-    }
+    /* ── MACRO PILLS ── */
+    .macro-pill-row { display: flex; gap: 5px; margin-bottom: 12px; }
+    .macro-pill { flex: 1; background: #222; border-radius: 8px; padding: 6px 4px; text-align: center; }
+    .macro-pill-val { font-size: 13px; font-weight: 800; }
+    .macro-pill-lbl { font-size: 9px; color: #555; margin-top: 1px; }
 
-    .meal-icon {
-      width: 42px; height: 42px;
-      border-radius: 11px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-      background: var(--meal-color-bg);
-      border: 1px solid var(--meal-color-border);
-    }
+    /* ── INGREDIENTS ── */
+    .slabel { font-size: 10px; letter-spacing: 0.1em; color: #555; text-transform: uppercase; margin-bottom: 8px; }
+    .ing-row { display: flex; justify-content: space-between; align-items: center; background: #222; border-radius: 8px; padding: 8px 11px; margin-bottom: 5px; }
+    .ing-name { color: #ccc; font-size: 12px; }
+    .ing-amt { font-weight: 700; font-size: 12px; padding: 2px 9px; border-radius: 16px; white-space: nowrap; }
 
-    .meal-info { flex: 1; }
-    .meal-title { font-weight: 700; font-size: 14px; color: #fff; }
-    .meal-time { font-size: 12px; color: #666; margin-top: 2px; }
+    /* ── SELECTORS ── */
+    .sel-section { margin-bottom: 12px; }
+    .sel-option { display: flex; align-items: center; justify-content: space-between; background: #222; border: 2px solid #333; border-radius: 9px; padding: 9px 11px; margin-bottom: 5px; cursor: pointer; transition: all 0.15s; }
+    .sel-option.selected { border-color: var(--meal-color, #F97316); background: var(--meal-color-bg, #F9731622); }
+    .sel-option-left { display: flex; align-items: center; gap: 9px; }
+    .sel-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #555; flex-shrink: 0; transition: all 0.15s; }
+    .sel-option.selected .sel-dot { background: var(--meal-color, #F97316); border-color: var(--meal-color, #F97316); }
+    .sel-name { font-size: 12px; color: #ccc; font-weight: 600; }
+    .sel-option.selected .sel-name { color: #fff; }
+    .sel-meta { font-size: 10px; color: #555; margin-top: 1px; }
+    .sel-option.selected .sel-meta { color: #aaa; }
+    .sel-cal { font-size: 12px; font-weight: 800; color: #555; }
+    .sel-option.selected .sel-cal { color: var(--meal-color, #F97316); }
 
-    .meal-macros { text-align: right; flex-shrink: 0; }
-    .meal-cal { font-size: 14px; font-weight: 700; color: var(--meal-color); }
-    .meal-prot { font-size: 11px; color: #555; margin-top: 2px; }
-
-    .meal-arrow {
-      margin-left: 6px;
-      color: #444;
-      font-size: 16px;
-      transition: transform 0.2s;
-      flex-shrink: 0;
-    }
-    .meal-card.open .meal-arrow { transform: rotate(180deg); }
-
-    /* EXPANDED */
-    .meal-body { display: none; padding: 0 18px 18px; }
-    .meal-card.open .meal-body { display: block; }
-
-    .divider { height: 1px; background: #2A2A2A; margin-bottom: 14px; }
-
-    .section-label {
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      color: #555;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    /* INGREDIENTS */
-    .ingredients { margin-bottom: 14px; }
-    .ingredient-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #222;
-      border-radius: 10px;
-      padding: 9px 12px;
-      margin-bottom: 6px;
-    }
-    .ingredient-name { color: #ccc; font-size: 13px; }
-    .ingredient-amount {
-      font-weight: 700;
-      font-size: 13px;
-      color: var(--meal-color);
-      background: var(--meal-color-bg);
-      padding: 3px 10px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
-
-    /* STEPS */
-    .steps { margin-bottom: 14px; }
-    .step-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
-    .step-num {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: var(--meal-color-bg);
-      color: var(--meal-color);
-      font-size: 10px;
-      font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+    /* ── STEPS ── */
+    .step-row { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 7px; }
+    .step-num { width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
     .step-text { color: #aaa; font-size: 12px; line-height: 1.5; }
 
-    /* SUPPLEMENTS */
-    .supplements {}
-    .supp-row {
-      background: #1E1E2E;
-      border: 1px solid #2A2A3E;
-      border-radius: 10px;
-      padding: 9px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-bottom: 6px;
-    }
+    /* ── SUPPLEMENTS ── */
+    .supp-row { background: #1E1E2E; border: 1px solid #2A2A3E; border-radius: 9px; padding: 8px 11px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; }
     .supp-name { color: #a78bfa; font-size: 12px; }
-    .supp-amount { color: #6b7280; font-size: 11px; }
+    .supp-amt { color: #6b7280; font-size: 11px; }
 
-    /* SWAPS */
-    .swaps { margin-bottom: 14px; }
-    .swaps-title {
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      color: #555;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-    .swaps-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-    .swap-item {
-      background: #1A2A1A;
-      border: 1px solid #2A3E2A;
-      border-radius: 10px;
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .swap-name { color: #86efac; font-size: 12px; font-weight: 600; }
-    .swap-amount { color: #4ade80; font-size: 13px; font-weight: 800; }
-    .swap-note { color: #555; font-size: 10px; }
+    /* ── WORKOUT ── */
+    .workout-ex { background: #222; border-radius: 9px; padding: 9px 12px; margin-bottom: 5px; }
+    .workout-ex-row { display: flex; justify-content: space-between; }
+    .workout-ex-name { font-size: 12px; color: #ccc; }
+    .workout-ex-sets { font-size: 12px; font-weight: 700; }
+    .workout-ex-rest { font-size: 10px; color: #555; margin-top: 3px; }
 
-    /* FOOTER */
-    .footer { text-align: center; margin-top: 28px; color: #333; font-size: 11px; }
+    /* ── REST DAY ── */
+    .rest-item { display: flex; justify-content: space-between; align-items: center; background: #222; border-radius: 9px; padding: 9px 12px; margin-bottom: 5px; }
+    .rest-item-name { font-size: 12px; color: #666; }
+    .rest-item-dur { font-size: 12px; font-weight: 700; color: #555; }
+
+    /* ── INFO BOX ── */
+    .info-box { border-radius: 9px; padding: 10px 12px; font-size: 11px; line-height: 1.6; margin-top: 8px; }
+
+    /* ── SKIPPED MEAL ── */
+    .skipped-meal { background: #111; border: 1px dashed #333; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; }
+    .skipped-meal-icon { font-size: 22px; opacity: 0.3; }
+    .skipped-meal-text { font-size: 12px; color: #444; }
+    .skipped-meal-reason { font-size: 11px; color: #333; margin-top: 2px; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <div class="header-label">Plan Nutrition</div>
-    <h1>Fat Loss & Muscle Build</h1>
-    <p>250 lbs → 220 lbs · Recomposition</p>
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-value">~2,460</div>
-        <div class="stat-label">Calories</div>
-        <div class="stat-unit">kcal/jour</div>
+<!-- ═══════════════════════════════════════
+     TAB NAVIGATION
+═══════════════════════════════════════ -->
+<div class="tab-nav">
+  <div class="tab-btn active" style="--day-color:#F97316;--day-color-bg:#F9731615;--day-color-border:#F9731644;" onclick="showDay('lun',this)">
+    <div class="day-name">LUN</div><div class="day-type">💪 Gym</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#22C55E;--day-color-bg:#22C55E15;--day-color-border:#22C55E44;" onclick="showDay('mar',this)">
+    <div class="day-name">MAR</div><div class="day-type">🏃 Course</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#3B82F6;--day-color-bg:#3B82F615;--day-color-border:#3B82F644;" onclick="showDay('mer',this)">
+    <div class="day-name">MER</div><div class="day-type">💪 Gym</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#a78bfa;--day-color-bg:#a78bfa15;--day-color-border:#a78bfa44;" onclick="showDay('jeu',this)">
+    <div class="day-name">JEU</div><div class="day-type">🧘 Actif</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#F97316;--day-color-bg:#F9731615;--day-color-border:#F9731644;" onclick="showDay('ven',this)">
+    <div class="day-name">VEN</div><div class="day-type">💪 Gym</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#22C55E;--day-color-bg:#22C55E15;--day-color-border:#22C55E44;" onclick="showDay('sam',this)">
+    <div class="day-name">SAM</div><div class="day-type">🏃+💪</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#555;--day-color-bg:#55555515;--day-color-border:#55555544;" onclick="showDay('dim',this)">
+    <div class="day-name">DIM</div><div class="day-type">😴 Repos</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#EC4899;--day-color-bg:#EC489915;--day-color-border:#EC489944;" onclick="showDay('plan',this)">
+    <div class="day-name">🏁</div><div class="day-type">Plan</div>
+  </div>
+  <div class="tab-btn" style="--day-color:#EAB308;--day-color-bg:#EAB30815;--day-color-border:#EAB30844;" onclick="showDay('tracker',this)">
+    <div class="day-name">📈</div><div class="day-type">Tracker</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     LUNDI — GYM UPPER PUSH (6 MEALS)
+═══════════════════════════════════════ -->
+<div id="page-lun" class="day-page active">
+  <div class="day-header" style="--day-color:#F97316;--day-color-bg:#F9731618;--day-color-border:#F9731633;--day-color-bg2:#F9731622;">
+    <div class="day-header-top">
+      <div class="day-emoji">💪</div>
+      <div style="flex:1"><div class="day-title">Lundi</div><div class="day-subtitle">Gym — Upper Push · Chest · Shoulders · Triceps</div></div>
+      <div class="day-badge" style="--day-color:#F97316;--day-color-bg2:#F9731622;--day-color-border:#F9731644;">6 repas</div>
+    </div>
+    <!-- Macro dashboard lundi -->
+    <div id="lun-macro-dash"></div>
+  </div>
+  <div id="lun-meals"></div>
+
+  <!-- WORKOUT -->
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#F9731622;">🏋️</div>
+        <div><div class="section-title">Upper Push</div><div class="section-sub">~60 min · Bench · OHP · Triceps</div></div>
       </div>
-      <div class="stat">
-        <div class="stat-value">~242g</div>
-        <div class="stat-label">Protéines</div>
-        <div class="stat-unit">/ jour</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">6</div>
-        <div class="stat-label">Repas</div>
-        <div class="stat-unit">/ jour</div>
-      </div>
-      <div class="stat">
-        <div class="stat-value">4L</div>
-        <div class="stat-label">Eau</div>
-        <div class="stat-unit">minimum</div>
-      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Bench Press</span><span class="workout-ex-sets" style="color:#F97316;">4 × 8</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Incline Dumbbell Press</span><span class="workout-ex-sets" style="color:#F97316;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 75 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Overhead Press</span><span class="workout-ex-sets" style="color:#F97316;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 75 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Lateral Raises</span><span class="workout-ex-sets" style="color:#F97316;">3 × 15</span></div><div class="workout-ex-rest">⏱ Repos: 45 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Tricep Pushdown</span><span class="workout-ex-sets" style="color:#F97316;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Skull Crushers</span><span class="workout-ex-sets" style="color:#F97316;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="info-box" style="background:#2A1A0A;color:#F97316;">💡 Gros composés = plus de repos. Isolation = moins de repos.</div>
     </div>
   </div>
+</div>
 
-  <div class="meals">
-
-    <!-- MEAL 1 -->
-    <div class="meal-card" style="--meal-color:#F97316;--meal-color-bg:#F9731622;--meal-color-border:#F9731644;--meal-color-alpha:#F9731655;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">🌅</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 1 — Breakfast</div>
-          <div class="meal-time">7h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">440 kcal</div>
-          <div class="meal-prot">42g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
-      </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Whole egg</span><span class="ingredient-amount">1 unité</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Egg whites</span><span class="ingredient-amount">120g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Cottage cheese 2%</span><span class="ingredient-amount">60g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Oatmeal sec</span><span class="ingredient-amount">60g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Blueberries</span><span class="ingredient-amount">75g</span></div>
-        </div>
-        <div class="swaps">
-          <div class="swaps-title">🔄 Alternatives à l'oatmeal (≈ mêmes calories)</div>
-          <div class="swaps-grid">
-            <div class="swap-item"><span class="swap-name">Gruau d'avoine cuit</span><span class="swap-amount">185g</span><span class="swap-note">~230 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Crème de blé cuite</span><span class="swap-amount">200g</span><span class="swap-note">~220 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Pain de blé entier</span><span class="swap-amount">70g (2 tranches)</span><span class="swap-note">~185 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Bagel de blé entier</span><span class="swap-amount">65g (½ bagel)</span><span class="swap-note">~175 cal</span></div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Scramble le whole egg + egg whites dans une poêle antiadhésive. Ajouter le cottage cheese en fin de cuisson pour une texture crémeuse.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Cuire l'oatmeal avec de l'eau, top avec les blueberries.</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Café noir recommandé ☕</div></div>
-        </div>
-        <div class="supplements">
-          <div class="section-label">💊 Suppléments</div>
-          <div class="supp-row"><span class="supp-name">💊 Oméga-3 Kirkland 1200mg</span><span class="supp-amount">2 capsules</span></div>
-          <div class="supp-row"><span class="supp-name">💊 Jamieson Multi</span><span class="supp-amount">1 capsule</span></div>
-          <div class="supp-row"><span class="supp-name">💊 Vitamine C+D3 Webber</span><span class="supp-amount">1 comprimé</span></div>
-          <div class="supp-row"><span class="supp-name">💊 Maca for Men Webber</span><span class="supp-amount">1 capsule</span></div>
-        </div>
-      </div>
+<!-- ═══════════════════════════════════════
+     MARDI — COURSE (6 MEALS, pre+post gardés)
+═══════════════════════════════════════ -->
+<div id="page-mar" class="day-page">
+  <div class="day-header" style="--day-color:#22C55E;--day-color-bg:#22C55E18;--day-color-border:#22C55E33;--day-color-bg2:#22C55E22;">
+    <div class="day-header-top">
+      <div class="day-emoji">🏃</div>
+      <div style="flex:1"><div class="day-title">Mardi</div><div class="day-subtitle">Course débutant · Run/Walk Phase 1 · ~35 min</div></div>
+      <div class="day-badge" style="--day-color:#22C55E;--day-color-bg2:#22C55E22;--day-color-border:#22C55E44;">6 repas</div>
     </div>
-
-    <!-- MEAL 2 -->
-    <div class="meal-card" style="--meal-color:#EAB308;--meal-color-bg:#EAB30822;--meal-color-border:#EAB30844;--meal-color-alpha:#EAB30855;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">⚡</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 2 — Pre-Workout</div>
-          <div class="meal-time">11h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">360 kcal</div>
-          <div class="meal-prot">45g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
+    <div id="mar-macro-dash"></div>
+  </div>
+  <div id="mar-meals"></div>
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#22C55E22;">🏃</div>
+        <div><div class="section-title">Course Phase 1</div><div class="section-sub">Run/Walk intervals · ~35 min</div></div>
       </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Greek yogurt 2% plain</span><span class="ingredient-amount">245g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Whey protein (1 scoop)</span><span class="ingredient-amount">30g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Banana (1 small)</span><span class="ingredient-amount">80g</span></div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Mix le whey dans le Greek yogurt ou en shake avec eau.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Manger la banana sur le côté.</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Mélanger la créatine directement dans le shake — goût neutre.</div></div>
-        </div>
-        <div class="supplements">
-          <div class="section-label">💊 Suppléments</div>
-          <div class="supp-row"><span class="supp-name">💊 Créatine monohydrate</span><span class="supp-amount">5g — dans le shake</span></div>
-        </div>
-      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
     </div>
-
-    <!-- MEAL 3 -->
-    <div class="meal-card" style="--meal-color:#22C55E;--meal-color-bg:#22C55E22;--meal-color-border:#22C55E44;--meal-color-alpha:#22C55E55;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">🍗</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 3 — Lunch</div>
-          <div class="meal-time">13h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">560 kcal</div>
-          <div class="meal-prot">50g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
-      </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Chicken breast ou lean ground turkey</span><span class="ingredient-amount">200g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Riz cuit ou patate douce cuite</span><span class="ingredient-amount">130g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Mixed veggies (broccoli, peppers, spinach)</span><span class="ingredient-amount">150g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Olive oil</span><span class="ingredient-amount">14g</span></div>
-        </div>
-        <div class="swaps">
-          <div class="swaps-title">🔄 Alternatives au riz/patate douce (≈ mêmes calories)</div>
-          <div class="swaps-grid">
-            <div class="swap-item"><span class="swap-name">Nouilles de riz cuites</span><span class="swap-amount">135g</span><span class="swap-note">~148 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Couscous cuit</span><span class="swap-amount">120g</span><span class="swap-note">~150 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Orge perlé cuit</span><span class="swap-amount">125g</span><span class="swap-note">~145 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Pain pita blé entier</span><span class="swap-amount">55g (1 pita)</span><span class="swap-note">~145 cal</span></div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Grill ou pan-cook le chicken avec sel, poivre, paprika, ail.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Servir sur le riz ou patate douce.</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Ajouter les veggies steamed ou roasted.</div></div>
-          <div class="step-row"><div class="step-num">4</div><div class="step-text">Drizzle avec l'olive oil.</div></div>
-        </div>
-      </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Échauffement marche</span><span class="workout-ex-sets" style="color:#22C55E;">5 min</span></div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Course 1 min / Marche 2 min</span><span class="workout-ex-sets" style="color:#22C55E;">× 8 reps</span></div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Retour au calme marche</span><span class="workout-ex-sets" style="color:#22C55E;">5 min</span></div></div>
+      <div class="info-box" style="background:#1A2A1A;color:#86efac;">🎯 Semaines 1–4. Progresser vers Course 2 min / Marche 1 min ensuite. Rythme Zone 2 — tu dois pouvoir parler.</div>
     </div>
+  </div>
+</div>
 
-    <!-- MEAL 4 -->
-    <div class="meal-card" style="--meal-color:#3B82F6;--meal-color-bg:#3B82F622;--meal-color-border:#3B82F644;--meal-color-alpha:#3B82F655;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">🏋️</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 4 — Post-Workout</div>
-          <div class="meal-time">16h00–17h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">320 kcal</div>
-          <div class="meal-prot">40g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
-      </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Whey protein (1.5 scoop)</span><span class="ingredient-amount">45g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Eau</span><span class="ingredient-amount">240g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Rice cake (1 galette)</span><span class="ingredient-amount">9g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Peanut butter</span><span class="ingredient-amount">16g</span></div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Blend le whey avec l'eau.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Spread le peanut butter sur le rice cake.</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Prendre le Shilajit avec le shake.</div></div>
-        </div>
-        <div class="supplements">
-          <div class="section-label">💊 Suppléments</div>
-          <div class="supp-row"><span class="supp-name">💊 Shilajit Nutritionn</span><span class="supp-amount">1 capsule — meilleure absorption post-effort</span></div>
-        </div>
-      </div>
+<!-- ═══════════════════════════════════════
+     MERCREDI — GYM LOWER BODY (6 MEALS)
+═══════════════════════════════════════ -->
+<div id="page-mer" class="day-page">
+  <div class="day-header" style="--day-color:#3B82F6;--day-color-bg:#3B82F618;--day-color-border:#3B82F633;--day-color-bg2:#3B82F622;">
+    <div class="day-header-top">
+      <div class="day-emoji">💪</div>
+      <div style="flex:1"><div class="day-title">Mercredi</div><div class="day-subtitle">Gym — Lower Body · Legs · Glutes · Core</div></div>
+      <div class="day-badge" style="--day-color:#3B82F6;--day-color-bg2:#3B82F622;--day-color-border:#3B82F644;">6 repas</div>
     </div>
-
-    <!-- MEAL 5 -->
-    <div class="meal-card" style="--meal-color:#8B5CF6;--meal-color-bg:#8B5CF622;--meal-color-border:#8B5CF644;--meal-color-alpha:#8B5CF655;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">🍽️</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 5 — Dinner</div>
-          <div class="meal-time">19h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">520 kcal</div>
-          <div class="meal-prot">40g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
+    <div id="mer-macro-dash"></div>
+  </div>
+  <div id="mer-meals"></div>
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#3B82F622;">🏋️</div>
+        <div><div class="section-title">Lower Body</div><div class="section-sub">~60 min · Squat · RDL · Legs</div></div>
       </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Salmon, beef, shrimp ou chicken breast</span><span class="ingredient-amount">200g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Patate douce cuite</span><span class="ingredient-amount">185g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Roasted veggies + salade</span><span class="ingredient-amount">150g</span></div>
-        </div>
-        <div class="swaps">
-          <div class="swaps-title">🔄 Alternatives à la patate douce (≈ mêmes calories)</div>
-          <div class="swaps-grid">
-            <div class="swap-item"><span class="swap-name">Nouilles de riz cuites</span><span class="swap-amount">190g</span><span class="swap-note">~207 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Riz basmati cuit</span><span class="swap-amount">175g</span><span class="swap-note">~196 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Pomme de terre cuite</span><span class="swap-amount">210g</span><span class="swap-note">~178 cal</span></div>
-            <div class="swap-item"><span class="swap-name">Couscous de blé entier cuit</span><span class="swap-amount">165g</span><span class="swap-note">~195 cal</span></div>
-          </div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Grill ou bake ton choix de protéine avec citron, herbes, ail.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Servir avec la patate douce cuite (rôtie au four avec cannelle ou herbes).</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Ajouter les veggies rôtis avec un filet d'huile d'olive.</div></div>
-        </div>
-      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
     </div>
-
-    <!-- MEAL 6 -->
-    <div class="meal-card" style="--meal-color:#EC4899;--meal-color-bg:#EC489922;--meal-color-border:#EC489944;--meal-color-alpha:#EC489955;" onclick="toggle(this)">
-      <div class="meal-header">
-        <div class="meal-icon">🌙</div>
-        <div class="meal-info">
-          <div class="meal-title">Meal 6 — Evening Snack</div>
-          <div class="meal-time">21h00</div>
-        </div>
-        <div class="meal-macros">
-          <div class="meal-cal">220 kcal</div>
-          <div class="meal-prot">25g protein</div>
-        </div>
-        <div class="meal-arrow">▾</div>
-      </div>
-      <div class="meal-body">
-        <div class="divider"></div>
-        <div class="ingredients">
-          <div class="section-label">Ingrédients</div>
-          <div class="ingredient-row"><span class="ingredient-name">Cottage cheese 2%</span><span class="ingredient-amount">225g</span></div>
-          <div class="ingredient-row"><span class="ingredient-name">Walnuts</span><span class="ingredient-amount">30g</span></div>
-        </div>
-        <div class="steps">
-          <div class="section-label">Préparation</div>
-          <div class="step-row"><div class="step-num">1</div><div class="step-text">Bowl de cottage cheese topped avec les walnuts.</div></div>
-          <div class="step-row"><div class="step-num">2</div><div class="step-text">Drizzle de miel ou cannelle optionnel.</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-text">Prendre le Magnésium + Ashwagandha avec le snack.</div></div>
-        </div>
-        <div class="supplements">
-          <div class="section-label">💊 Suppléments</div>
-          <div class="supp-row"><span class="supp-name">💊 Magnésium Jamieson 500mg</span><span class="supp-amount">1 capsule — favorise le sommeil</span></div>
-          <div class="supp-row"><span class="supp-name">💊 Ashwagandha Webber 7200mg</span><span class="supp-amount">1 capsule — réduit le cortisol</span></div>
-        </div>
-      </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Squat</span><span class="workout-ex-sets" style="color:#3B82F6;">4 × 8</span></div><div class="workout-ex-rest">⏱ Repos: 2 min</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Romanian Deadlift</span><span class="workout-ex-sets" style="color:#3B82F6;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Leg Press</span><span class="workout-ex-sets" style="color:#3B82F6;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Walking Lunges</span><span class="workout-ex-sets" style="color:#3B82F6;">3 × 12 / jambe</span></div><div class="workout-ex-rest">⏱ Repos: 75 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Leg Curl</span><span class="workout-ex-sets" style="color:#3B82F6;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Calf Raises</span><span class="workout-ex-sets" style="color:#3B82F6;">4 × 15</span></div><div class="workout-ex-rest">⏱ Repos: 45 sec</div></div>
     </div>
+  </div>
+</div>
 
+<!-- ═══════════════════════════════════════
+     JEUDI — REPOS ACTIF (4 MEALS, pas pre/post)
+═══════════════════════════════════════ -->
+<div id="page-jeu" class="day-page">
+  <div class="day-header" style="--day-color:#a78bfa;--day-color-bg:#a78bfa18;--day-color-border:#a78bfa33;--day-color-bg2:#a78bfa22;">
+    <div class="day-header-top">
+      <div class="day-emoji">🧘</div>
+      <div style="flex:1"><div class="day-title">Jeudi</div><div class="day-subtitle">Repos Actif — Mobilité Triathlon · ~50 min</div></div>
+      <div class="day-badge" style="--day-color:#a78bfa;--day-color-bg2:#a78bfa22;--day-color-border:#a78bfa44;">4 repas</div>
+    </div>
+    <div id="jeu-macro-dash"></div>
+  </div>
+  <div id="jeu-meals"></div>
+  <!-- Mobility workout -->
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#a78bfa22;">🧘</div>
+        <div><div class="section-title">Mobilité Triathlon</div><div class="section-sub">Marche · Foam Rolling · Stretching · ~50 min</div></div>
+      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="slabel" style="color:#a78bfa;">🚶 Activation (20 min)</div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Marche extérieure</span><span class="workout-ex-sets" style="color:#a78bfa;">20 min</span></div></div>
+      <div class="slabel" style="color:#a78bfa;margin-top:10px;">🔵 Foam Rolling (10 min)</div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Quadriceps</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec / jambe</span></div><div class="workout-ex-rest">Allongé sur le ventre, rouler de la hanche au genou</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Mollets</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec / jambe</span></div><div class="workout-ex-rest">Assis, croiser l'autre jambe pour plus de pression</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">IT Band</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec / jambe</span></div><div class="workout-ex-rest">Sur le côté, de la hanche vers le genou — crucial coureurs</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Thoracic Spine</span><span class="workout-ex-sets" style="color:#a78bfa;">90 sec</span></div><div class="workout-ex-rest">Sur le dos, perpendiculaire à la colonne</div></div>
+      <div class="slabel" style="color:#a78bfa;margin-top:10px;">🧘 Stretching (20 min)</div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Hip Flexor Lunge</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec / côté</span></div><div class="workout-ex-rest">Fente basse, bassin vers l'avant — essentiel vélo + course</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Pigeon Pose</span><span class="workout-ex-sets" style="color:#a78bfa;">90 sec / côté</span></div><div class="workout-ex-rest">Relâche fessiers et hanche</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Hamstring Stretch couché</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec / jambe</span></div><div class="workout-ex-rest">Jambe tendue vers le plafond, mains derrière la cuisse</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Calf / Achilles Stretch</span><span class="workout-ex-sets" style="color:#a78bfa;">45 sec / jambe</span></div><div class="workout-ex-rest">Face au mur, talon au sol — anti-blessure running</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Chest Opener</span><span class="workout-ex-sets" style="color:#a78bfa;">60 sec</span></div><div class="workout-ex-rest">Mains dans le dos, ouvrir la poitrine — posture vélo/nage</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Child's Pose</span><span class="workout-ex-sets" style="color:#a78bfa;">90 sec</span></div><div class="workout-ex-rest">Bras étendus, front au sol — décompresse la colonne</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Ankle Circles</span><span class="workout-ex-sets" style="color:#a78bfa;">30 sec / pied</span></div><div class="workout-ex-rest">Cercles dans les deux sens — mobilité course</div></div>
+      <div class="info-box" style="background:#1E1E2E;color:#818cf8;">💡 Hip flexors = vélo · Pigeon = course · Calf = anti-blessure · Chest opener = nage.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     VENDREDI — GYM UPPER PULL (6 MEALS)
+═══════════════════════════════════════ -->
+<div id="page-ven" class="day-page">
+  <div class="day-header" style="--day-color:#F97316;--day-color-bg:#F9731618;--day-color-border:#F9731633;--day-color-bg2:#F9731622;">
+    <div class="day-header-top">
+      <div class="day-emoji">💪</div>
+      <div style="flex:1"><div class="day-title">Vendredi</div><div class="day-subtitle">Gym — Upper Pull · Back · Biceps · Rear Delts</div></div>
+      <div class="day-badge" style="--day-color:#F97316;--day-color-bg2:#F9731622;--day-color-border:#F9731644;">6 repas</div>
+    </div>
+    <div id="ven-macro-dash"></div>
+  </div>
+  <div id="ven-meals"></div>
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#F9731622;">🏋️</div>
+        <div><div class="section-title">Upper Pull</div><div class="section-sub">~60 min · Back · Biceps · Rear Delts</div></div>
+      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Pull-ups ou Lat Pulldown</span><span class="workout-ex-sets" style="color:#F97316;">4 × 8</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Barbell Row</span><span class="workout-ex-sets" style="color:#F97316;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Seated Cable Row</span><span class="workout-ex-sets" style="color:#F97316;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 75 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Face Pulls</span><span class="workout-ex-sets" style="color:#F97316;">3 × 15</span></div><div class="workout-ex-rest">⏱ Repos: 45 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Dumbbell Curl</span><span class="workout-ex-sets" style="color:#F97316;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Hammer Curl</span><span class="workout-ex-sets" style="color:#F97316;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SAMEDI — COURSE + GYM (6 MEALS)
+═══════════════════════════════════════ -->
+<div id="page-sam" class="day-page">
+  <div class="day-header" style="--day-color:#22C55E;--day-color-bg:#22C55E18;--day-color-border:#22C55E33;--day-color-bg2:#22C55E22;">
+    <div class="day-header-top">
+      <div class="day-emoji">🏃</div>
+      <div style="flex:1"><div class="day-title">Samedi</div><div class="day-subtitle">Course Phase 1 + Gym Full Body · ~90 min</div></div>
+      <div class="day-badge" style="--day-color:#22C55E;--day-color-bg2:#22C55E22;--day-color-border:#22C55E44;">6 repas</div>
+    </div>
+    <div id="sam-macro-dash"></div>
+  </div>
+  <div id="sam-meals"></div>
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#22C55E22;">🏃</div>
+        <div><div class="section-title">Course Phase 1 + Full Body</div><div class="section-sub">~90 min total</div></div>
+      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="slabel" style="color:#22C55E;">Course (40 min)</div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Échauffement marche</span><span class="workout-ex-sets" style="color:#22C55E;">5 min</span></div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Course 1 min / Marche 2 min</span><span class="workout-ex-sets" style="color:#22C55E;">× 10 reps</span></div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Retour au calme marche</span><span class="workout-ex-sets" style="color:#22C55E;">5 min</span></div></div>
+      <div class="slabel" style="color:#22C55E;margin-top:10px;">Gym Full Body Léger (~45 min)</div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Deadlift léger</span><span class="workout-ex-sets" style="color:#22C55E;">3 × 8</span></div><div class="workout-ex-rest">⏱ Repos: 90 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Dumbbell Press</span><span class="workout-ex-sets" style="color:#22C55E;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Cable Row</span><span class="workout-ex-sets" style="color:#22C55E;">3 × 12</span></div><div class="workout-ex-rest">⏱ Repos: 60 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Plank</span><span class="workout-ex-sets" style="color:#22C55E;">3 × 45 sec</span></div><div class="workout-ex-rest">⏱ Repos: 45 sec</div></div>
+      <div class="workout-ex"><div class="workout-ex-row"><span class="workout-ex-name">Ab Wheel</span><span class="workout-ex-sets" style="color:#22C55E;">3 × 10</span></div><div class="workout-ex-rest">⏱ Repos: 45 sec</div></div>
+      <div class="info-box" style="background:#0A2A1A;color:#22C55E;">💡 Course EN PREMIER, gym après. Tu veux le cardio frais.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DIMANCHE — REPOS COMPLET (4 MEALS)
+═══════════════════════════════════════ -->
+<div id="page-dim" class="day-page">
+  <div class="day-header" style="--day-color:#555;--day-color-bg:#55555518;--day-color-border:#55555533;--day-color-bg2:#55555522;">
+    <div class="day-header-top">
+      <div class="day-emoji">😴</div>
+      <div style="flex:1"><div class="day-title">Dimanche</div><div class="day-subtitle">Repos Complet — Récupération · Sommeil · Nutrition</div></div>
+      <div class="day-badge" style="--day-color:#555;--day-color-bg2:#55555522;--day-color-border:#55555544;">4 repas</div>
+    </div>
+    <div id="dim-macro-dash"></div>
+  </div>
+  <div id="dim-meals"></div>
+  <div class="section-card" onclick="toggleCard(this)">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:#22222233;">😴</div>
+        <div><div class="section-title">Protocole Repos</div><div class="section-sub">Le dimanche c'est sacré</div></div>
+      </div>
+      <div class="section-right"><span class="section-arrow">▾</span></div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="rest-item"><span class="rest-item-name">Aucun entraînement</span><span class="rest-item-dur">0 min</span></div>
+      <div class="rest-item"><span class="rest-item-name">Dormir 8h minimum</span><span class="rest-item-dur">Priorité #1</span></div>
+      <div class="rest-item"><span class="rest-item-name">Meal prep semaine</span><span class="rest-item-dur">Optionnel</span></div>
+      <div class="rest-item"><span class="rest-item-name">Créatine 5g quand même</span><span class="rest-item-dur">Dans un verre d'eau</span></div>
+      <div class="info-box" style="background:#1E1E2E;color:#818cf8;">💡 Corps + mental récupèrent complètement. C'est pendant le repos que tu progresses.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PLAN IRONMAN
+═══════════════════════════════════════ -->
+<div id="page-plan" class="day-page">
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:11px;letter-spacing:0.15em;color:#555;text-transform:uppercase;margin-bottom:6px;">Objectif</div>
+    <div style="font-size:24px;font-weight:800;">Road to Half-Ironman 🏁</div>
+    <div style="color:#888;font-size:13px;margin-top:4px;">Été 2027 · 12–14 mois</div>
+  </div>
+  <!-- Distances banner -->
+  <div style="background:#1A1A2E;border:1px solid #2A2A4E;border-radius:14px;padding:14px;margin-bottom:14px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#6366f1;text-transform:uppercase;margin-bottom:10px;">🏆 Distances 70.3</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;">
+      <div style="background:#12122A;border-radius:10px;padding:10px 4px;"><div style="font-size:18px;margin-bottom:3px;">🏊</div><div style="font-size:15px;font-weight:800;color:#818cf8;">1.9 km</div><div style="font-size:10px;color:#555;">Natation</div></div>
+      <div style="background:#12122A;border-radius:10px;padding:10px 4px;"><div style="font-size:18px;margin-bottom:3px;">🚴</div><div style="font-size:15px;font-weight:800;color:#818cf8;">90 km</div><div style="font-size:10px;color:#555;">Vélo</div></div>
+      <div style="background:#12122A;border-radius:10px;padding:10px 4px;"><div style="font-size:18px;margin-bottom:3px;">🏃</div><div style="font-size:15px;font-weight:800;color:#818cf8;">21.1 km</div><div style="font-size:10px;color:#555;">Course</div></div>
+    </div>
+  </div>
+  <!-- 4 Phases -->
+  <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:14px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:12px;">🏃 Programme Course — 4 Phases</div>
+    <div id="phases-container"></div>
+  </div>
+  <!-- Next Steps -->
+  <div style="background:#1A2A1A;border:1px solid #2A3E2A;border-radius:14px;padding:14px;margin-bottom:14px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#4ade80;text-transform:uppercase;margin-bottom:10px;">🎯 Prochaines Étapes</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;gap:8px;align-items:center;background:#1E2E1E;border-radius:9px;padding:9px 11px;"><span>1️⃣</span><span style="font-size:11px;color:#aaa;"><b style="color:#86efac;">Maintenant:</b> Phase 1 course + soigner le pec</span></div>
+      <div style="display:flex;gap:8px;align-items:center;background:#1E2E1E;border-radius:9px;padding:9px 11px;"><span>2️⃣</span><span style="font-size:11px;color:#aaa;"><b style="color:#86efac;">Mois 3:</b> Acheter un vélo ou s'abonner à Zwift</span></div>
+      <div style="display:flex;gap:8px;align-items:center;background:#1E2E1E;border-radius:9px;padding:9px 11px;"><span>3️⃣</span><span style="font-size:11px;color:#aaa;"><b style="color:#86efac;">Mois 4:</b> Cours de natation (YMCA ou piscine municipale)</span></div>
+      <div style="display:flex;gap:8px;align-items:center;background:#1E2E1E;border-radius:9px;padding:9px 11px;"><span>4️⃣</span><span style="font-size:11px;color:#aaa;"><b style="color:#86efac;">Mois 6:</b> S'inscrire officiellement au 70.3</span></div>
+      <div style="display:flex;gap:8px;align-items:center;background:#1E2E1E;border-radius:9px;padding:9px 11px;"><span>5️⃣</span><span style="font-size:11px;color:#aaa;"><b style="color:#86efac;">Mois 8:</b> Sprint triathlon test (750m / 20km / 5km)</span></div>
+    </div>
+  </div>
+  <!-- Rules -->
+  <div style="background:#1A1A2E;border:1px solid #2A2A4E;border-radius:14px;padding:14px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#6366f1;text-transform:uppercase;margin-bottom:10px;">💡 Règles d'Or</div>
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <div style="display:flex;gap:8px;"><span>🐢</span><div style="font-size:11px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">80/20:</b> 80% basse intensité. Tu dois pouvoir parler en phrases complètes.</div></div>
+      <div style="display:flex;gap:8px;"><span>📈</span><div style="font-size:11px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">10%:</b> Jamais augmenter le volume de plus de 10% par semaine.</div></div>
+      <div style="display:flex;gap:8px;"><span>👟</span><div style="font-size:11px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Chaussures:</b> Souliers adaptés à ta foulée — Running Room.</div></div>
+      <div style="display:flex;gap:8px;"><span>💧</span><div style="font-size:11px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Hydratation:</b> 500ml avant. Au-delà de 45 min, eau + citron + sel.</div></div>
+      <div style="display:flex;gap:8px;"><span>😴</span><div style="font-size:11px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Récup:</b> Jamais 2 jours course consécutifs en Phase 1.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TRACKER + GRAPHIQUE
+═══════════════════════════════════════ -->
+<div id="page-tracker" class="day-page">
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:11px;letter-spacing:0.15em;color:#555;text-transform:uppercase;margin-bottom:6px;">Suivi</div>
+    <div style="font-size:24px;font-weight:800;">📈 Progression Gym</div>
+    <div style="color:#888;font-size:13px;margin-top:4px;">Poids soulevé · Reps · Semaine par semaine</div>
   </div>
 
-  <div class="footer">Toutes les quantités sont en grammes (g) · 1 gallon d'eau/jour</div>
-
-  <!-- TRAINING PLAN -->
-  <div style="max-width:600px;margin:36px auto 0;padding:0;">
-
-    <!-- Training Header -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="font-size:11px;letter-spacing:0.15em;color:#555;text-transform:uppercase;margin-bottom:8px;">Plan Entraînement</div>
-      <h2 style="font-size:24px;font-weight:800;letter-spacing:-0.02em;">Road to Half-Ironman 🏁</h2>
-      <p style="color:#888;font-size:13px;margin-top:5px;">Été 2027 · 12–14 mois · 4 gym + 1–2 courses/semaine</p>
-    </div>
-
-    <!-- Half-Ironman Info Banner -->
-    <div style="background:#1A1A2E;border:1px solid #2A2A4E;border-radius:16px;padding:16px 18px;margin-bottom:20px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#6366f1;text-transform:uppercase;margin-bottom:10px;">🏆 Distances Demi-Ironman (70.3)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;">
-        <div style="background:#12122A;border-radius:10px;padding:10px 6px;">
-          <div style="font-size:20px;margin-bottom:4px;">🏊</div>
-          <div style="font-size:16px;font-weight:800;color:#818cf8;">1.9 km</div>
-          <div style="font-size:10px;color:#555;">Natation</div>
-        </div>
-        <div style="background:#12122A;border-radius:10px;padding:10px 6px;">
-          <div style="font-size:20px;margin-bottom:4px;">🚴</div>
-          <div style="font-size:16px;font-weight:800;color:#818cf8;">90 km</div>
-          <div style="font-size:10px;color:#555;">Vélo</div>
-        </div>
-        <div style="background:#12122A;border-radius:10px;padding:10px 6px;">
-          <div style="font-size:20px;margin-bottom:4px;">🏃</div>
-          <div style="font-size:16px;font-weight:800;color:#818cf8;">21.1 km</div>
-          <div style="font-size:10px;color:#555;">Course</div>
-        </div>
+  <!-- Week selector -->
+  <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:11px;color:#666;">Semaine active</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="changeWeek(-1)" style="background:#222;border:1px solid #333;color:#fff;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer;">‹</button>
+        <span id="weekLabel" style="font-size:16px;font-weight:800;color:#fff;min-width:80px;text-align:center;">Semaine 1</span>
+        <button onclick="changeWeek(1)" style="background:#222;border:1px solid #333;color:#fff;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer;">›</button>
       </div>
     </div>
-
-    <!-- Weekly Schedule -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:16px;padding:16px 18px;margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:14px;">📅 Horaire Hebdomadaire</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-
-        <!-- LUNDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('lun')" style="display:flex;align-items:center;gap:12px;background:#222;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#F97316;flex-shrink:0;">LUN</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#fff;">💪 Gym — Upper Push</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;">Chest · Shoulders · Triceps · ~60 min</div>
-            </div>
-            <div style="font-size:11px;background:#F9731622;color:#F97316;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Gym</div>
-            <div id="lun-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="lun" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="font-size:11px;letter-spacing:0.1em;color:#F97316;text-transform:uppercase;margin-bottom:10px;">Exercices</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Bench Press</span><span style="font-size:12px;font-weight:700;color:#F97316;">4 × 8</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Incline Dumbbell Press</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 10</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Overhead Press</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 10</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Lateral Raises</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 15</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Tricep Pushdown</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Skull Crushers</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 10</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- MARDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('mar')" style="display:flex;align-items:center;gap:12px;background:#222;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#22C55E;flex-shrink:0;">MAR</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#fff;">🏃 Course — Débutant</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;">Run/Walk intervals · ~30–40 min</div>
-            </div>
-            <div style="font-size:11px;background:#22C55E22;color:#22C55E;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Course</div>
-            <div id="mar-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="mar" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="font-size:11px;letter-spacing:0.1em;color:#22C55E;text-transform:uppercase;margin-bottom:10px;">Programme Phase 1</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Échauffement marche</span><span style="font-size:12px;font-weight:700;color:#22C55E;">5 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Course 1 min / Marche 2 min</span><span style="font-size:12px;font-weight:700;color:#22C55E;">× 8 reps</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Retour au calme marche</span><span style="font-size:12px;font-weight:700;color:#22C55E;">5 min</span></div>
-            </div>
-            <div style="margin-top:10px;background:#1A2A1A;border-radius:8px;padding:8px 12px;font-size:11px;color:#86efac;">🎯 Objectif semaines 1–4. Progresser vers Course 2 min / Marche 1 min ensuite.</div>
-          </div>
-        </div>
-
-        <!-- MERCREDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('mer')" style="display:flex;align-items:center;gap:12px;background:#222;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#3B82F6;flex-shrink:0;">MER</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#fff;">💪 Gym — Lower Body</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;">Legs · Glutes · Core · ~60 min</div>
-            </div>
-            <div style="font-size:11px;background:#3B82F622;color:#3B82F6;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Gym</div>
-            <div id="mer-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="mer" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="font-size:11px;letter-spacing:0.1em;color:#3B82F6;text-transform:uppercase;margin-bottom:10px;">Exercices</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Squat</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">4 × 8</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Romanian Deadlift</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">3 × 10</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Leg Press</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Walking Lunges</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">3 × 12 / jambe</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Leg Curl</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Calf Raises</span><span style="font-size:12px;font-weight:700;color:#3B82F6;">4 × 15</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- JEUDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('jeu')" style="display:flex;align-items:center;gap:12px;background:#1A2A1A;border:1px solid #2A3E2A;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#555;flex-shrink:0;">JEU</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#666;">😴 Repos Actif</div>
-              <div style="font-size:11px;color:#444;margin-top:2px;">Marche · Stretching · Mobilité</div>
-            </div>
-            <div style="font-size:11px;background:#2A2A2A;color:#555;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Repos</div>
-            <div id="jeu-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="jeu" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Marche légère</span><span style="font-size:12px;font-weight:700;color:#555;">20–30 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Stretching full body</span><span style="font-size:12px;font-weight:700;color:#555;">15 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Foam rolling</span><span style="font-size:12px;font-weight:700;color:#555;">10 min</span></div>
-            </div>
-            <div style="margin-top:10px;background:#1E1E2E;border-radius:8px;padding:8px 12px;font-size:11px;color:#818cf8;">💡 Le repos c'est là où tu progresses. Ne saute pas cette journée.</div>
-          </div>
-        </div>
-
-        <!-- VENDREDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('ven')" style="display:flex;align-items:center;gap:12px;background:#222;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#F97316;flex-shrink:0;">VEN</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#fff;">💪 Gym — Upper Pull</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;">Back · Biceps · Rear Delts · ~60 min</div>
-            </div>
-            <div style="font-size:11px;background:#F9731622;color:#F97316;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Gym</div>
-            <div id="ven-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="ven" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="font-size:11px;letter-spacing:0.1em;color:#F97316;text-transform:uppercase;margin-bottom:10px;">Exercices</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Pull-ups ou Lat Pulldown</span><span style="font-size:12px;font-weight:700;color:#F97316;">4 × 8</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Barbell Row</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 10</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Seated Cable Row</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Face Pulls</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 15</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Dumbbell Curl</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Hammer Curl</span><span style="font-size:12px;font-weight:700;color:#F97316;">3 × 12</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SAMEDI -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('sam')" style="display:flex;align-items:center;gap:12px;background:#222;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#22C55E;flex-shrink:0;">SAM</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#fff;">🏃 Course Longue + Gym</div>
-              <div style="font-size:11px;color:#666;margin-top:2px;">Run/Walk × 10 reps + Full Body léger · ~90 min</div>
-            </div>
-            <div style="font-size:11px;background:#22C55E22;color:#22C55E;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Course+Gym</div>
-            <div id="sam-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="sam" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="font-size:11px;letter-spacing:0.1em;color:#22C55E;text-transform:uppercase;margin-bottom:10px;">Course — Phase 1 (Longue)</div>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Échauffement marche</span><span style="font-size:12px;font-weight:700;color:#22C55E;">5 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Course 1 min / Marche 2 min</span><span style="font-size:12px;font-weight:700;color:#22C55E;">× 10 reps</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Retour au calme marche</span><span style="font-size:12px;font-weight:700;color:#22C55E;">5 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Total sortie</span><span style="font-size:12px;font-weight:700;color:#22C55E;">~40 min</span></div>
-            </div>
-            <div style="margin-bottom:12px;background:#1A2A1A;border-radius:8px;padding:8px 12px;font-size:11px;color:#86efac;">🎯 Même structure que mardi mais 2 répétitions de plus. Progression graduelle!</div>
-            <div style="font-size:11px;letter-spacing:0.1em;color:#22C55E;text-transform:uppercase;margin-bottom:10px;">Gym — Full Body Léger</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Deadlift léger</span><span style="font-size:12px;font-weight:700;color:#22C55E;">3 × 8</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Dumbbell Press</span><span style="font-size:12px;font-weight:700;color:#22C55E;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Cable Row</span><span style="font-size:12px;font-weight:700;color:#22C55E;">3 × 12</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Plank</span><span style="font-size:12px;font-weight:700;color:#22C55E;">3 × 45 sec</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Ab Wheel</span><span style="font-size:12px;font-weight:700;color:#22C55E;">3 × 10</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- DIMANCHE -->
-        <div style="border-radius:10px;overflow:hidden;">
-          <div onclick="toggleDay('dim')" style="display:flex;align-items:center;gap:12px;background:#1A2A1A;border:1px solid #2A3E2A;padding:11px 14px;cursor:pointer;">
-            <div style="width:36px;text-align:center;font-size:11px;font-weight:800;color:#555;flex-shrink:0;">DIM</div>
-            <div style="flex:1;">
-              <div style="font-size:13px;font-weight:700;color:#666;">😴 Repos Complet</div>
-              <div style="font-size:11px;color:#444;margin-top:2px;">Récupération · Sommeil · Nutrition</div>
-            </div>
-            <div style="font-size:11px;background:#2A2A2A;color:#555;padding:3px 8px;border-radius:20px;white-space:nowrap;margin-right:6px;">Repos</div>
-            <div id="dim-arrow" style="color:#444;font-size:16px;transition:transform 0.2s;">▾</div>
-          </div>
-          <div id="dim" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-top:none;padding:14px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Aucun entraînement</span><span style="font-size:12px;font-weight:700;color:#555;">0 min</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Dormir 8h minimum</span><span style="font-size:12px;font-weight:700;color:#555;">Priorité #1</span></div>
-              <div style="display:flex;justify-content:space-between;background:#252525;border-radius:8px;padding:8px 12px;"><span style="font-size:12px;color:#ccc;">Meal prep pour la semaine</span><span style="font-size:12px;font-weight:700;color:#555;">Optionnel</span></div>
-            </div>
-            <div style="margin-top:10px;background:#1E1E2E;border-radius:8px;padding:8px 12px;font-size:11px;color:#818cf8;">💡 Le dimanche c'est sacré. Corps + mental ont besoin de récupérer complètement.</div>
-          </div>
-        </div>
-
-      </div>
+    <div style="display:flex;gap:5px;margin-bottom:14px;overflow-x:auto;padding-bottom:3px;">
+      <button onclick="selectTrackerDay('lundi')" id="tab-lundi" style="flex-shrink:0;padding:6px 11px;border-radius:20px;border:1px solid #F97316;background:#F9731622;color:#F97316;font-size:11px;font-weight:700;cursor:pointer;">LUN 💪</button>
+      <button onclick="selectTrackerDay('mercredi')" id="tab-mercredi" style="flex-shrink:0;padding:6px 11px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">MER 💪</button>
+      <button onclick="selectTrackerDay('vendredi')" id="tab-vendredi" style="flex-shrink:0;padding:6px 11px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">VEN 💪</button>
+      <button onclick="selectTrackerDay('samedi')" id="tab-samedi" style="flex-shrink:0;padding:6px 11px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">SAM 💪</button>
     </div>
-
-    <!-- PROGRESSION TRACKER -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:16px;padding:16px 18px;margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:14px;">📈 Progression Gym</div>
-
-      <!-- Week selector -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div style="font-size:11px;color:#666;">Semaine active</div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <button onclick="changeWeek(-1)" style="background:#222;border:1px solid #333;color:#fff;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer;">‹</button>
-          <span id="weekLabel" style="font-size:16px;font-weight:800;color:#fff;min-width:80px;text-align:center;">Semaine 1</span>
-          <button onclick="changeWeek(1)" style="background:#222;border:1px solid #333;color:#fff;width:30px;height:30px;border-radius:8px;font-size:16px;cursor:pointer;">›</button>
-        </div>
-      </div>
-
-      <!-- Day tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;">
-        <button onclick="selectDay('lundi')" id="tab-lundi" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid #F97316;background:#F9731622;color:#F97316;font-size:11px;font-weight:700;cursor:pointer;">LUN 💪</button>
-        <button onclick="selectDay('mercredi')" id="tab-mercredi" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">MER 💪</button>
-        <button onclick="selectDay('vendredi')" id="tab-vendredi" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">VEN 💪</button>
-        <button onclick="selectDay('samedi')" id="tab-samedi" style="flex-shrink:0;padding:6px 12px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">SAM 💪</button>
-      </div>
-
-      <!-- Exercise log area -->
-      <div id="exerciseLog"></div>
-
-      <!-- Save button -->
-      <button onclick="saveLog()" style="width:100%;margin-top:14px;padding:13px;background:#22C55E;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.02em;">💾 Sauvegarder la séance</button>
-      <div id="saveMsg" style="text-align:center;font-size:12px;color:#22C55E;margin-top:8px;display:none;">✅ Séance sauvegardée!</div>
-    </div>
-
-    <!-- History -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:16px;padding:16px 18px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-        <div style="font-size:11px;letter-spacing:0.12em;color:#555;text-transform:uppercase;">Historique</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button onclick="filterHistory('all')" id="filter-all" style="padding:4px 10px;border-radius:20px;border:1px solid #F97316;background:#F9731622;color:#F97316;font-size:10px;cursor:pointer;">Tout</button>
-          <button onclick="filterHistory('lundi')" id="filter-lundi" style="padding:4px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">LUN</button>
-          <button onclick="filterHistory('mercredi')" id="filter-mercredi" style="padding:4px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">MER</button>
-          <button onclick="filterHistory('vendredi')" id="filter-vendredi" style="padding:4px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">VEN</button>
-          <button onclick="filterHistory('samedi')" id="filter-samedi" style="padding:4px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">SAM</button>
-        </div>
-      </div>
-      <div id="historyLog"><div style="text-align:center;color:#444;font-size:13px;padding:20px 0;">Aucune séance enregistrée encore.<br>Commence à logger tes séances! 💪</div></div>
-    </div>
-
-    <!-- Running Program Phases -->
-    <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:16px;padding:16px 18px;margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:14px;">🏃 Programme Course — 4 Phases</div>
-
-      <!-- Phase 1 -->
-      <div style="margin-bottom:14px;" onclick="togglePhase('p1')">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:10px;padding:12px 14px;">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Phase 1 — Base</div>
-            <div style="font-size:11px;color:#666;margin-top:2px;">Mois 1–3 · Run/Walk → 30 min continu</div>
-          </div>
-          <div style="font-size:11px;background:#22C55E22;color:#22C55E;padding:3px 10px;border-radius:20px;">Maintenant</div>
-        </div>
-        <div id="p1" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-4px;">
-          <div style="font-size:11px;color:#888;line-height:1.7;">
-            <b style="color:#22C55E;">Semaines 1–2:</b> Marche 5 min → Course 1 min / Marche 2 min × 8 répétitions<br>
-            <b style="color:#22C55E;">Semaines 3–4:</b> Course 2 min / Marche 1 min × 8 répétitions<br>
-            <b style="color:#22C55E;">Semaines 5–8:</b> Course 5 min / Marche 1 min × 5 répétitions<br>
-            <b style="color:#22C55E;">Semaines 9–12:</b> Course continue 20 min → objectif 30 min<br>
-            <br><b style="color:#aaa;">🎯 Objectif fin phase:</b> Courir 30 min sans arrêt
-          </div>
-        </div>
-      </div>
-
-      <!-- Phase 2 -->
-      <div style="margin-bottom:14px;" onclick="togglePhase('p2')">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:10px;padding:12px 14px;">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Phase 2 — Endurance</div>
-            <div style="font-size:11px;color:#666;margin-top:2px;">Mois 4–6 · 30 min → 60 min continu</div>
-          </div>
-          <div style="font-size:11px;background:#EAB30822;color:#EAB308;padding:3px 10px;border-radius:20px;">Mois 4</div>
-        </div>
-        <div id="p2" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-4px;">
-          <div style="font-size:11px;color:#888;line-height:1.7;">
-            <b style="color:#EAB308;">Semaines 13–16:</b> 3 courses/semaine de 30–35 min<br>
-            <b style="color:#EAB308;">Semaines 17–20:</b> 2 courses courtes (35 min) + 1 longue (45 min)<br>
-            <b style="color:#EAB308;">Semaines 21–24:</b> 2 courses (40 min) + 1 longue (55–60 min)<br>
-            <br><b style="color:#aaa;">🎯 Objectif fin phase:</b> Courir 60 min · ~8–9 km
-          </div>
-        </div>
-      </div>
-
-      <!-- Phase 3 -->
-      <div style="margin-bottom:14px;" onclick="togglePhase('p3')">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:10px;padding:12px 14px;">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Phase 3 — Triathlon Build</div>
-            <div style="font-size:11px;color:#666;margin-top:2px;">Mois 7–10 · Vélo + Nage + Course</div>
-          </div>
-          <div style="font-size:11px;background:#3B82F622;color:#3B82F6;padding:3px 10px;border-radius:20px;">Mois 7</div>
-        </div>
-        <div id="p3" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-4px;">
-          <div style="font-size:11px;color:#888;line-height:1.7;">
-            <b style="color:#3B82F6;">Priorité 1:</b> Commencer la natation — cours débutant ou YMCA<br>
-            <b style="color:#3B82F6;">Priorité 2:</b> Ajouter le vélo (route ou indoor) 2x/semaine<br>
-            <b style="color:#3B82F6;">Course:</b> 1 sortie courte (45 min) + 1 longue (70–80 min)<br>
-            <b style="color:#3B82F6;">Gym:</b> Réduire à 3x/semaine pour faire place au tri-training<br>
-            <br><b style="color:#aaa;">🎯 Objectif fin phase:</b> Nager 1 km · Vélo 60 km · Courir 15 km
-          </div>
-        </div>
-      </div>
-
-      <!-- Phase 4 -->
-      <div onclick="togglePhase('p4')">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:10px;padding:12px 14px;">
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#fff;">Phase 4 — Peak & Race Prep</div>
-            <div style="font-size:11px;color:#666;margin-top:2px;">Mois 11–14 · Simulation race + Taper</div>
-          </div>
-          <div style="font-size:11px;background:#EC489922;color:#EC4899;padding:3px 10px;border-radius:20px;">Mois 11</div>
-        </div>
-        <div id="p4" style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 10px 10px;padding:12px 14px;margin-top:-4px;">
-          <div style="font-size:11px;color:#888;line-height:1.7;">
-            <b style="color:#EC4899;">Semaines 45–50:</b> Brick workouts (vélo → course enchaînés)<br>
-            <b style="color:#EC4899;">Semaines 51–54:</b> Volume maximum — simulations race complètes<br>
-            <b style="color:#EC4899;">Semaines 55–56:</b> Taper — réduire volume de 40%, maintenir intensité<br>
-            <b style="color:#EC4899;">Semaine race:</b> Repos, hydratation, nutrition optimale<br>
-            <br><b style="color:#aaa;">🎯 Objectif:</b> Terminer le demi-Ironman 70.3 🏁
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Running Tips -->
-    <div style="background:#1A1A2E;border:1px solid #2A2A4E;border-radius:16px;padding:16px 18px;margin-bottom:16px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#6366f1;text-transform:uppercase;margin-bottom:12px;">💡 Règles d'Or — Course Débutant</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">🐢</span>
-          <div style="font-size:12px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Règle 80/20:</b> 80% de tes courses à basse intensité (tu peux parler), 20% plus intense. Ne pas aller trop vite trop vite.</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">📈</span>
-          <div style="font-size:12px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Règle 10%:</b> N'augmente jamais ton volume hebdomadaire de plus de 10% par semaine pour éviter les blessures.</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">👟</span>
-          <div style="font-size:12px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Bonnes chaussures:</b> Investis dans des souliers de course adaptés à ta foulée (magasin spécialisé comme Running Room).</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">💧</span>
-          <div style="font-size:12px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Hydratation:</b> Boire 500ml d'eau 30 min avant chaque course. Au-delà de 45 min, apporter de l'eau.</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:16px;flex-shrink:0;">😴</span>
-          <div style="font-size:12px;color:#aaa;line-height:1.5;"><b style="color:#818cf8;">Récupération:</b> Jamais 2 jours de course consécutifs en phase débutant. Le repos c'est où tu progresses.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Next Steps -->
-    <div style="background:#1A2A1A;border:1px solid #2A3E2A;border-radius:16px;padding:16px 18px;">
-      <div style="font-size:11px;letter-spacing:0.12em;color:#4ade80;text-transform:uppercase;margin-bottom:12px;">🎯 Prochaines Étapes</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;gap:10px;align-items:center;background:#1E2E1E;border-radius:10px;padding:10px 12px;">
-          <span style="font-size:16px;">1️⃣</span>
-          <div style="font-size:12px;color:#aaa;"><b style="color:#86efac;">Maintenant:</b> Commencer Phase 1 course dès cette semaine</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;background:#1E2E1E;border-radius:10px;padding:10px 12px;">
-          <span style="font-size:16px;">2️⃣</span>
-          <div style="font-size:12px;color:#aaa;"><b style="color:#86efac;">Mois 3:</b> Acheter un vélo de route ou s'abonner à Zwift (indoor)</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;background:#1E2E1E;border-radius:10px;padding:10px 12px;">
-          <span style="font-size:16px;">3️⃣</span>
-          <div style="font-size:12px;color:#aaa;"><b style="color:#86efac;">Mois 4:</b> S'inscrire à des cours de natation (YMCA ou piscine municipale)</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;background:#1E2E1E;border-radius:10px;padding:10px 12px;">
-          <span style="font-size:16px;">4️⃣</span>
-          <div style="font-size:12px;color:#aaa;"><b style="color:#86efac;">Mois 6:</b> S'inscrire officiellement au demi-Ironman 70.3 pour avoir la date cible</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;background:#1E2E1E;border-radius:10px;padding:10px 12px;">
-          <span style="font-size:16px;">5️⃣</span>
-          <div style="font-size:12px;color:#aaa;"><b style="color:#86efac;">Mois 8:</b> Faire un sprint triathlon comme test (750m nage / 20km vélo / 5km course)</div>
-        </div>
-      </div>
-    </div>
-
+    <div id="exerciseLog"></div>
+    <button onclick="saveLog()" style="width:100%;margin-top:12px;padding:13px;background:#22C55E;border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:800;cursor:pointer;">💾 Sauvegarder la séance</button>
+    <div id="saveMsg" style="text-align:center;font-size:12px;color:#22C55E;margin-top:8px;display:none;">✅ Séance sauvegardée!</div>
   </div>
 
-  <div class="footer" style="margin-top:32px;">Toutes les quantités sont en grammes (g) · 1 gallon d'eau/jour · 🏁 Road to Half-Ironman Été 2027</div>
+  <!-- CHART -->
+  <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:12px;">📊 Graphique d'Évolution</div>
+    <div style="display:flex;gap:5px;margin-bottom:8px;overflow-x:auto;padding-bottom:3px;">
+      <button onclick="setChartDay('lundi')" id="ctab-lundi" style="flex-shrink:0;padding:5px 10px;border-radius:20px;border:1px solid #F97316;background:#F9731622;color:#F97316;font-size:10px;font-weight:700;cursor:pointer;">LUN</button>
+      <button onclick="setChartDay('mercredi')" id="ctab-mercredi" style="flex-shrink:0;padding:5px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;font-weight:700;cursor:pointer;">MER</button>
+      <button onclick="setChartDay('vendredi')" id="ctab-vendredi" style="flex-shrink:0;padding:5px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;font-weight:700;cursor:pointer;">VEN</button>
+      <button onclick="setChartDay('samedi')" id="ctab-samedi" style="flex-shrink:0;padding:5px 10px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;font-weight:700;cursor:pointer;">SAM</button>
+    </div>
+    <div style="margin-bottom:10px;">
+      <select id="chartExercise" onchange="renderChart()" style="width:100%;background:#222;border:1px solid #333;color:#fff;font-size:13px;padding:9px 12px;border-radius:10px;font-weight:600;"></select>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button onclick="setChartMetric('weight')" id="cmet-weight" style="flex:1;padding:7px;border-radius:10px;border:1px solid #3B82F6;background:#3B82F622;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;">Poids</button>
+      <button onclick="setChartMetric('reps')" id="cmet-reps" style="flex:1;padding:7px;border-radius:10px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">Reps</button>
+      <button onclick="setChartMetric('volume')" id="cmet-volume" style="flex:1;padding:7px;border-radius:10px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">Volume (p×r)</button>
+    </div>
+    <div style="position:relative;width:100%;height:200px;background:#111;border-radius:12px;overflow:hidden;padding:12px 8px 28px 36px;">
+      <canvas id="progressChart" style="width:100%;height:100%;display:none;"></canvas>
+      <div id="chartEmpty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;text-align:center;padding:20px;">Aucune donnée — commence à logger tes séances!</div>
+    </div>
+    <div id="chartStats" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;"></div>
+  </div>
 
-  <script>
-    function toggle(card) { card.classList.toggle('open'); }
-    function togglePhase(id) {
-      const el = document.getElementById(id);
-      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  <!-- HISTORY -->
+  <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;">Historique</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        <button onclick="filterHistory('all')" id="filter-all" style="padding:4px 9px;border-radius:20px;border:1px solid #F97316;background:#F9731622;color:#F97316;font-size:10px;cursor:pointer;">Tout</button>
+        <button onclick="filterHistory('lundi')" id="filter-lundi" style="padding:4px 9px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">LUN</button>
+        <button onclick="filterHistory('mercredi')" id="filter-mercredi" style="padding:4px 9px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">MER</button>
+        <button onclick="filterHistory('vendredi')" id="filter-vendredi" style="padding:4px 9px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">VEN</button>
+        <button onclick="filterHistory('samedi')" id="filter-samedi" style="padding:4px 9px;border-radius:20px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:10px;cursor:pointer;">SAM</button>
+      </div>
+    </div>
+    <div id="historyLog"><div style="text-align:center;color:#444;font-size:13px;padding:20px 0;">Aucune séance encore. Commence à logger! 💪</div></div>
+  </div>
+</div>
+
+<div style="text-align:center;padding:24px 16px;color:#333;font-size:11px;">~2,200 cal/jour · Objectif 225 lbs · 🏁 Half-Ironman Été 2027</div>
+
+<script>
+// ═══════════════════════════════════
+// MEAL DATA
+// ═══════════════════════════════════
+const MEALS_DATA = {
+  m1: {
+    id:'m1', emoji:'🌅', title:'Meal 1 — Breakfast', time:'7h00',
+    color:'#F97316', colorBg:'#F9731622', colorBorder:'#F9731644',
+    fixed: { cal:210, prot:35, carbs:2, fat:10 },
+    fixedIngredients: [
+      {name:'Whole egg', amt:'1 unité'},
+      {name:'Egg whites', amt:'120g'},
+      {name:'Cottage cheese 2%', amt:'60g'},
+      {name:'Blueberries', amt:'75g'},
+    ],
+    carbSelector: [
+      {name:'Oatmeal Kirkland sec', meta:'60g · 36g glucides · 7g prot', cal:210, prot:7, carbs:36, fat:3},
+      {name:'Crème de blé cuite', meta:'180g · 34g glucides · 4g prot', cal:185, prot:4, carbs:34, fat:1},
+      {name:'½ Bagel blé entier', meta:'37g · 35g glucides · 7g prot', cal:175, prot:7, carbs:35, fat:2},
+      {name:'2 tranches pain blé entier', meta:'70g · 30g glucides · 7g prot', cal:160, prot:7, carbs:30, fat:2},
+    ],
+    steps: [
+      'Scramble whole egg + egg whites. Ajouter cottage cheese en fin de cuisson.',
+      'Cuire l\'oatmeal avec eau, top blueberries. Café noir ☕',
+    ],
+    supps: [
+      {name:'💊 Oméga-3 Kirkland 1200mg', amt:'2 capsules'},
+      {name:'💊 Jamieson Multi', amt:'1 capsule'},
+      {name:'💊 Vitamine C+D3 Webber', amt:'1 comprimé'},
+      {name:'💊 Maca for Men Webber', amt:'1 capsule'},
+    ],
+  },
+  m2: {
+    id:'m2', emoji:'⚡', title:'Meal 2 — Pre-Workout', time:'11h00',
+    color:'#EAB308', colorBg:'#EAB30822', colorBorder:'#EAB30844',
+    fixed: { cal:330, prot:40, carbs:28, fat:5 },
+    fixedIngredients: [
+      {name:'Greek yogurt 2% plain', amt:'245g'},
+      {name:'Whey Isolate Diesel (1 scoop)', amt:'30g'},
+      {name:'Banana small', amt:'80g'},
+      {name:'Créatine monohydrate', amt:'5g'},
+    ],
+    steps: [
+      'Mix whey + créatine dans le Greek yogurt ou shake avec eau.',
+      'Banana sur le côté. 30–45 min avant l\'entraînement.',
+    ],
+    supps: [],
+  },
+  m3: {
+    id:'m3', emoji:'🍗', title:'Meal 3 — Lunch', time:'13h00',
+    color:'#22C55E', colorBg:'#22C55E22', colorBorder:'#22C55E44',
+    fixed: { cal:155, prot:4, carbs:6, fat:14 },
+    fixedIngredients: [
+      {name:'Mixed veggies (broccoli, peppers, spinach)', amt:'150g'},
+      {name:'Olive oil', amt:'14g'},
+    ],
+    protSelector: [
+      {name:'Chicken breast', meta:'200g · 46g prot · 0g glucides', cal:220, prot:46, carbs:0, fat:5},
+      {name:'Lean ground turkey', meta:'200g · 42g prot · 10g gras', cal:250, prot:42, carbs:0, fat:10},
+      {name:'Lean ground beef 90%', meta:'200g · 40g prot · 11g gras', cal:240, prot:40, carbs:0, fat:11},
+    ],
+    carbSelector: [
+      {name:'Riz blanc cuit', meta:'130g · 32g glucides', cal:145, prot:3, carbs:32, fat:0},
+      {name:'Patate douce cuite', meta:'130g · 28g glucides', cal:118, prot:2, carbs:28, fat:0},
+      {name:'Nouilles de riz cuites', meta:'135g · 30g glucides', cal:148, prot:2, carbs:30, fat:0},
+      {name:'Couscous cuit', meta:'120g · 27g glucides', cal:150, prot:5, carbs:27, fat:1},
+    ],
+    steps: [
+      'Grill ou pan-cook ta protéine avec sel, poivre, paprika, ail.',
+      'Cuire ta source de glucides. Ajouter les veggies + olive oil.',
+    ],
+    supps: [],
+  },
+  m4: {
+    id:'m4', emoji:'🏋️', title:'Meal 4 — Post-Workout', time:'16h00–17h00',
+    color:'#3B82F6', colorBg:'#3B82F622', colorBorder:'#3B82F644',
+    fixed: { cal:290, prot:38, carbs:18, fat:6 },
+    fixedIngredients: [
+      {name:'Whey Isolate Diesel (1.5 scoop)', amt:'45g'},
+      {name:'Eau', amt:'240g'},
+      {name:'Rice cake (1 galette)', amt:'9g'},
+      {name:'Peanut butter', amt:'16g'},
+    ],
+    steps: [
+      'Blend whey avec eau.',
+      'Spread peanut butter sur le rice cake.',
+    ],
+    supps: [{name:'💊 Shilajit Nutritionn', amt:'1 capsule'}],
+  },
+  m5: {
+    id:'m5', emoji:'🍽️', title:'Meal 5 — Dinner', time:'19h00',
+    color:'#8B5CF6', colorBg:'#8B5CF622', colorBorder:'#8B5CF644',
+    fixed: { cal:60, prot:2, carbs:4, fat:2 },
+    fixedIngredients: [{name:'Roasted veggies + salade', amt:'150g'}],
+    protSelector: [
+      {name:'Salmon', meta:'200g · 40g prot · 5g gras', cal:208, prot:40, carbs:0, fat:5},
+      {name:'Chicken breast', meta:'200g · 46g prot · 5g gras', cal:220, prot:46, carbs:0, fat:5},
+      {name:'Shrimp', meta:'200g · 38g prot · 2g glucides', cal:200, prot:38, carbs:2, fat:4},
+      {name:'Lean beef 90%', meta:'200g · 40g prot · 11g gras', cal:240, prot:40, carbs:0, fat:11},
+    ],
+    carbSelector: [
+      {name:'Patate douce cuite', meta:'185g · 38g glucides', cal:168, prot:2, carbs:38, fat:0},
+      {name:'Riz basmati cuit', meta:'175g · 43g glucides', cal:196, prot:4, carbs:43, fat:0},
+      {name:'Pomme de terre cuite', meta:'210g · 40g glucides', cal:178, prot:4, carbs:40, fat:0},
+      {name:'Couscous blé entier cuit', meta:'165g · 38g glucides', cal:195, prot:6, carbs:38, fat:1},
+    ],
+    steps: [
+      'Grill ou bake ta protéine avec citron, herbes, ail.',
+      'Préparer ta source de glucides. Ajouter les veggies rôtis.',
+    ],
+    supps: [],
+  },
+  m6: {
+    id:'m6', emoji:'🌙', title:'Meal 6 — Evening Snack', time:'21h00',
+    color:'#EC4899', colorBg:'#EC489922', colorBorder:'#EC489944',
+    fixed: { cal:220, prot:25, carbs:8, fat:10 },
+    fixedIngredients: [
+      {name:'Cottage cheese 2%', amt:'225g'},
+      {name:'Walnuts', amt:'30g'},
+    ],
+    steps: [
+      'Bowl cottage cheese + walnuts. Drizzle miel ou cannelle optionnel.',
+      'Prendre Magnésium + Ashwagandha avec ce snack.',
+    ],
+    supps: [
+      {name:'💊 Magnésium Jamieson 500mg', amt:'1 capsule'},
+      {name:'💊 Ashwagandha Webber 7200mg', amt:'1 capsule'},
+    ],
+  },
+  // JEU snack (replacement for m2/m4 on rest days)
+  mjeusnack: {
+    id:'mjeusnack', emoji:'🥗', title:'Snack — Après-Midi', time:'15h00',
+    color:'#a78bfa', colorBg:'#a78bfa22', colorBorder:'#a78bfa44',
+    fixed: { cal:180, prot:20, carbs:12, fat:6 },
+    fixedIngredients: [
+      {name:'Greek yogurt 2% plain', amt:'150g'},
+      {name:'Walnuts', amt:'15g'},
+      {name:'Créatine monohydrate', amt:'5g — dans un verre d\'eau'},
+    ],
+    steps: ['Greek yogurt + walnuts. Créatine dans un verre d\'eau séparément.'],
+    supps: [],
+  },
+};
+
+// ═══════════════════════════════════
+// DAY CONFIGS — which meals + targets
+// ═══════════════════════════════════
+const DAY_CONFIGS = {
+  lun: { meals: ['m1','m2','m3','m4','m5','m6'], targets: {cal:2200, prot:230, carbs:170, fat:65} },
+  mar: { meals: ['m1','m2','m3','m4','m5','m6'], targets: {cal:2200, prot:230, carbs:170, fat:65} },
+  mer: { meals: ['m1','m2','m3','m4','m5','m6'], targets: {cal:2200, prot:230, carbs:170, fat:65} },
+  jeu: { meals: ['m1','m3','mjeusnack','m5','m6'], targets: {cal:1800, prot:200, carbs:130, fat:55}, note:'Repos actif — Meal 2 et Meal 4 retirés. Snack léger à 15h00 à la place.' },
+  ven: { meals: ['m1','m2','m3','m4','m5','m6'], targets: {cal:2200, prot:230, carbs:170, fat:65} },
+  sam: { meals: ['m1','m2','m3','m4','m5','m6'], targets: {cal:2200, prot:230, carbs:170, fat:65} },
+  dim: { meals: ['m1','m3','m5','m6'], targets: {cal:1700, prot:185, carbs:120, fat:52}, note:'Repos complet — Meal 2 et Meal 4 retirés. 4 repas seulement.' },
+};
+
+// ═══════════════════════════════════
+// SELECTION STATE
+// ═══════════════════════════════════
+const selections = {
+  m1: { carb: {cal:210,prot:7,carbs:36,fat:3} },
+  m3: { prot:{cal:220,prot:46,carbs:0,fat:5}, carb:{cal:145,prot:3,carbs:32,fat:0} },
+  m5: { prot:{cal:208,prot:40,carbs:0,fat:5}, carb:{cal:168,prot:2,carbs:38,fat:0} },
+};
+
+function getMealTotals(mId) {
+  const m = MEALS_DATA[mId];
+  if (!m) return {cal:0,prot:0,carbs:0,fat:0};
+  let c = {...m.fixed};
+  if (selections[mId]) {
+    Object.values(selections[mId]).forEach(s => { c.cal+=s.cal; c.prot+=s.prot; c.carbs+=s.carbs; c.fat+=s.fat; });
+  }
+  return c;
+}
+
+function getDayTotals(dayKey) {
+  const cfg = DAY_CONFIGS[dayKey];
+  let tot = {cal:0,prot:0,carbs:0,fat:0};
+  cfg.meals.forEach(mId => {
+    const t = getMealTotals(mId);
+    tot.cal+=t.cal; tot.prot+=t.prot; tot.carbs+=t.carbs; tot.fat+=t.fat;
+  });
+  return tot;
+}
+
+// ═══════════════════════════════════
+// RENDER MACRO DASHBOARD
+// ═══════════════════════════════════
+function renderMacroDash(dayKey) {
+  const el = document.getElementById(dayKey + '-macro-dash');
+  if (!el) return;
+  const t = getDayTotals(dayKey);
+  const tgt = DAY_CONFIGS[dayKey].targets;
+  function bar(val, target, color) {
+    const pct = Math.min(100, Math.round(val/target*100));
+    const over = pct >= 100;
+    return `<div class="progress-row">
+      <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${over?'#EF4444':color};"></div></div>
+      <div class="progress-val" style="color:${over?'#EF4444':color};">${pct}%</div>
+    </div>`;
+  }
+  el.innerHTML = `
+    <div class="macro-grid">
+      <div class="macro-box"><div class="macro-val" style="color:#F97316;" id="${dayKey}-dcal">${t.cal}</div><div class="macro-lbl">kcal</div></div>
+      <div class="macro-box"><div class="macro-val" style="color:#3B82F6;" id="${dayKey}-dprot">${t.prot}g</div><div class="macro-lbl">protéines</div></div>
+      <div class="macro-box"><div class="macro-val" style="color:#22C55E;" id="${dayKey}-dcarbs">${t.carbs}g</div><div class="macro-lbl">glucides</div></div>
+      <div class="macro-box"><div class="macro-val" style="color:#EAB308;" id="${dayKey}-dfat">${t.fat}g</div><div class="macro-lbl">gras</div></div>
+    </div>
+    <div>
+      <div class="progress-row"><span class="progress-label" style="color:#F97316;font-size:10px;">Cal / ${tgt.cal}</span>${bar(t.cal,tgt.cal,'#F97316')}</div>
+      <div class="progress-row"><span class="progress-label" style="color:#3B82F6;font-size:10px;">Prot / ${tgt.prot}g</span>${bar(t.prot,tgt.prot,'#3B82F6')}</div>
+      <div class="progress-row"><span class="progress-label" style="color:#22C55E;font-size:10px;">Carbs / ${tgt.carbs}g</span>${bar(t.carbs,tgt.carbs,'#22C55E')}</div>
+      <div class="progress-row"><span class="progress-label" style="color:#EAB308;font-size:10px;">Gras / ${tgt.fat}g</span>${bar(t.fat,tgt.fat,'#EAB308')}</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════
+// RENDER MEALS FOR A DAY
+// ═══════════════════════════════════
+function renderMeals(dayKey) {
+  const container = document.getElementById(dayKey + '-meals');
+  if (!container) return;
+  const cfg = DAY_CONFIGS[dayKey];
+  let html = '';
+
+  // Show rest day note if applicable
+  if (cfg.note) {
+    html += `<div style="background:#1E1E2E;border:1px solid #2A2A4E;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:#818cf8;">ℹ️ ${cfg.note}</div>`;
+  }
+
+  cfg.meals.forEach(mId => {
+    const m = MEALS_DATA[mId];
+    const t = getMealTotals(mId);
+    html += buildMealCard(m, t, dayKey, mId);
+  });
+  container.innerHTML = html;
+}
+
+function buildMealCard(m, t, dayKey, mId) {
+  const selIdPrefix = `${dayKey}_${mId}`;
+  let html = `<div class="section-card" onclick="toggleCard(this)" style="--meal-color:${m.color};--meal-color-bg:${m.colorBg};">
+    <div class="section-card-header">
+      <div class="section-card-header-left">
+        <div class="section-icon" style="background:${m.colorBg};">${m.emoji}</div>
+        <div><div class="section-title">${m.title}</div><div class="section-sub">${m.time}</div></div>
+      </div>
+      <div class="section-right">
+        <span class="section-cal" style="color:${m.color};" id="cal-${selIdPrefix}">${t.cal} kcal</span>
+        <span class="section-arrow">▾</span>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="sdivider"></div>
+      <div class="macro-pill-row">
+        <div class="macro-pill"><div class="macro-pill-val" style="color:${m.color};" id="p-cal-${selIdPrefix}">${t.cal}</div><div class="macro-pill-lbl">kcal</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#3B82F6;" id="p-prot-${selIdPrefix}">${t.prot}g</div><div class="macro-pill-lbl">prot</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#22C55E;" id="p-carbs-${selIdPrefix}">${t.carbs}g</div><div class="macro-pill-lbl">carbs</div></div>
+        <div class="macro-pill"><div class="macro-pill-val" style="color:#EAB308;" id="p-fat-${selIdPrefix}">${t.fat}g</div><div class="macro-pill-lbl">gras</div></div>
+      </div>`;
+
+  // Fixed ingredients
+  if (m.fixedIngredients && m.fixedIngredients.length) {
+    html += `<div class="slabel">Ingrédients</div>`;
+    m.fixedIngredients.forEach(ing => {
+      html += `<div class="ing-row"><span class="ing-name">${ing.name}</span><span class="ing-amt" style="color:${m.color};background:${m.colorBg};">${ing.amt}</span></div>`;
+    });
+  }
+
+  // Protein selector
+  if (m.protSelector) {
+    html += `<div class="sel-section"><div class="slabel">🥩 Choisis ta protéine</div>`;
+    m.protSelector.forEach((opt, i) => {
+      const isSel = selections[mId] && selections[mId].prot
+        ? selections[mId].prot.cal === opt.cal && selections[mId].prot.prot === opt.prot
+        : i === 0;
+      html += `<div class="sel-option${isSel?' selected':''}"
+        data-meal="${mId}" data-type="prot" data-idx="${i}"
+        onclick="selectOpt(event,'${mId}','prot',${i},'${dayKey}')"
+        data-cal="${opt.cal}" data-prot="${opt.prot}" data-carbs="${opt.carbs}" data-fat="${opt.fat}"
+        style="--meal-color:${m.color};--meal-color-bg:${m.colorBg};">
+        <div class="sel-option-left"><div class="sel-dot"></div><div><div class="sel-name">${opt.name}</div><div class="sel-meta">${opt.meta}</div></div></div>
+        <div class="sel-cal">${opt.cal} cal</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Carb selector
+  if (m.carbSelector) {
+    html += `<div class="sel-section"><div class="slabel">🌾 Choisis tes glucides</div>`;
+    m.carbSelector.forEach((opt, i) => {
+      const isSel = selections[mId] && selections[mId].carb
+        ? selections[mId].carb.cal === opt.cal && selections[mId].carb.prot === opt.prot
+        : i === 0;
+      html += `<div class="sel-option${isSel?' selected':''}"
+        data-meal="${mId}" data-type="carb" data-idx="${i}"
+        onclick="selectOpt(event,'${mId}','carb',${i},'${dayKey}')"
+        data-cal="${opt.cal}" data-prot="${opt.prot}" data-carbs="${opt.carbs}" data-fat="${opt.fat}"
+        style="--meal-color:${m.color};--meal-color-bg:${m.colorBg};">
+        <div class="sel-option-left"><div class="sel-dot"></div><div><div class="sel-name">${opt.name}</div><div class="sel-meta">${opt.meta}</div></div></div>
+        <div class="sel-cal">${opt.cal} cal</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Steps
+  if (m.steps && m.steps.length) {
+    html += `<div class="slabel" style="margin-top:8px;">Préparation</div>`;
+    m.steps.forEach((s, i) => {
+      html += `<div class="step-row"><div class="step-num" style="background:${m.colorBg};color:${m.color};">${i+1}</div><div class="step-text">${s}</div></div>`;
+    });
+  }
+
+  // Supplements
+  if (m.supps && m.supps.length) {
+    html += `<div class="slabel" style="margin-top:8px;">💊 Suppléments</div>`;
+    m.supps.forEach(s => {
+      html += `<div class="supp-row"><span class="supp-name">${s.name}</span><span class="supp-amt">${s.amt}</span></div>`;
+    });
+  }
+
+  html += `</div></div>`;
+  return html;
+}
+
+// ═══════════════════════════════════
+// SELECT OPTION (protein / carb)
+// ═══════════════════════════════════
+function selectOpt(event, mId, type, idx, dayKey) {
+  try { event.stopPropagation(); } catch(e) {}
+
+  const m = MEALS_DATA[mId];
+  if (!m) return;
+  const opts = type === 'prot' ? m.protSelector : m.carbSelector;
+  if (!opts || !opts[idx]) return;
+  const opt = opts[idx];
+
+  // Update selection state
+  if (!selections[mId]) selections[mId] = {};
+  selections[mId][type] = { cal: opt.cal, prot: opt.prot, carbs: opt.carbs, fat: opt.fat };
+
+  // Find ALL selector options for this mId+type across the whole document and update them
+  document.querySelectorAll(`[data-meal="${mId}"][data-type="${type}"]`).forEach(el => {
+    const elIdx = parseInt(el.getAttribute('data-idx'));
+    if (elIdx === idx) {
+      el.classList.add('selected');
+    } else {
+      el.classList.remove('selected');
     }
-    function toggleDay(id) {
-      const el = document.getElementById(id);
-      const arrow = document.getElementById(id + '-arrow');
-      const isOpen = el.style.display === 'block';
-      el.style.display = isOpen ? 'none' : 'block';
-      if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  });
+
+  // Refresh macros for every day that contains this meal
+  Object.keys(DAY_CONFIGS).forEach(dk => {
+    if (!DAY_CONFIGS[dk].meals.includes(mId)) return;
+    const prefix = dk + '_' + mId;
+    const t = getMealTotals(mId);
+    const pCal = document.getElementById('p-cal-' + prefix);
+    const pProt = document.getElementById('p-prot-' + prefix);
+    const pCarbs = document.getElementById('p-carbs-' + prefix);
+    const pFat = document.getElementById('p-fat-' + prefix);
+    const calH = document.getElementById('cal-' + prefix);
+    if (pCal) pCal.textContent = t.cal;
+    if (pProt) pProt.textContent = t.prot + 'g';
+    if (pCarbs) pCarbs.textContent = t.carbs + 'g';
+    if (pFat) pFat.textContent = t.fat + 'g';
+    if (calH) calH.textContent = t.cal + ' kcal';
+    renderMacroDash(dk);
+  });
+}
+
+// ═══════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════
+function showDay(dayKey, btn) {
+  document.querySelectorAll('.day-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + dayKey);
+  if (page) page.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function toggleCard(card) {
+  card.classList.toggle('open');
+}
+
+// ═══════════════════════════════════
+// PHASES
+// ═══════════════════════════════════
+const PHASES = [
+  { title:'Phase 1 — Base', sub:'Mois 1–3 · Run/Walk → 30 min continu', badge:'✅ Maintenant', badgeColor:'#22C55E',
+    weeks:[
+      {label:'Sem. 1–2: Course 1 min / Marche 2 min', val:'× 8 reps'},
+      {label:'Sem. 3–4: Course 2 min / Marche 1 min', val:'× 8 reps'},
+      {label:'Sem. 5–8: Course 5 min / Marche 1 min', val:'× 5 reps'},
+      {label:'Sem. 9–12: Course continue', val:'20 → 30 min'},
+    ],
+    goal:'Courir 30 min sans arrêt',
+    notes:['Règle 80/20: rythme où tu peux parler en phrases complètes','Règle 10%: jamais +10% de volume/semaine','Bonnes chaussures: Running Room','Jamais 2 jours consécutifs de course en Phase 1'],
+    noteColor:'#22C55E', noteBg:'#1A2A1A'
+  },
+  { title:'Phase 2 — Endurance', sub:'Mois 4–6 · 30 min → 60 min continu', badge:'Mois 4', badgeColor:'#EAB308',
+    weeks:[
+      {label:'Sem. 13–16: 3 courses/semaine', val:'30–35 min'},
+      {label:'Sem. 17–20: 2 courtes + 1 longue', val:'35 + 45 min'},
+      {label:'Sem. 21–24: 2 courtes + 1 longue', val:'40 + 55–60 min'},
+    ],
+    goal:'Courir 60 min continu · ~8–9 km',
+    notes:['Commencer le vélo: acheter un vélo ou s\'abonner à Zwift','Sortie longue = Zone 2 obligatoire','Remonter à ~2,400 cal les jours de longue sortie','S\'abonner à des cours de natation (YMCA)'],
+    noteColor:'#EAB308', noteBg:'#2A2010'
+  },
+  { title:'Phase 3 — Triathlon Build', sub:'Mois 7–10 · Vélo + Nage + Course', badge:'Mois 7', badgeColor:'#3B82F6',
+    weeks:[
+      {label:'Natation: 2x/semaine débutant', val:'500m → 1km'},
+      {label:'Vélo: 2x/semaine progressif', val:'30 → 60 km'},
+      {label:'Course: 1 courte + 1 longue', val:'45 + 70–80 min'},
+      {label:'Gym: réduit à 3x/semaine', val:'maintenance'},
+    ],
+    goal:'Nager 1 km · Vélo 60 km · Courir 15 km',
+    notes:['Brick workouts: enchaîner vélo → course','S\'inscrire officiellement au demi-Ironman 70.3','Monter à ~2,600–2,800 cal les jours de double','Maintenir 230g protéines/jour'],
+    noteColor:'#3B82F6', noteBg:'#0A1A2A'
+  },
+  { title:'Phase 4 — Peak & Race Prep', sub:'Mois 11–14 · Simulation race + Taper', badge:'Mois 11', badgeColor:'#EC4899',
+    weeks:[
+      {label:'Sem. 45–50: Brick workouts complets', val:'Vélo → Course'},
+      {label:'Sem. 51–54: Volume maximum', val:'Simulations race'},
+      {label:'Sem. 55–56: Taper', val:'Volume -40%'},
+      {label:'Semaine race', val:'Repos + nutrition'},
+    ],
+    goal:'Terminer le demi-Ironman 70.3 🏁 Mi-juin 2027',
+    notes:['Taper = normal de se sentir lourd, ne pas paniquer','Race week: glucides à ~250g/jour','La veille: repas glucides simples, aucun nouvel aliment','Matin de la race: manger 2-3h avant','Gels énergétiques toutes les 45 min vélo et course','Objectif: finisher en ~6-7h pour un premier 70.3'],
+    noteColor:'#EC4899', noteBg:'#2A0A1A'
+  },
+];
+
+function renderPhases() {
+  const c = document.getElementById('phases-container');
+  if (!c) return;
+  c.innerHTML = PHASES.map((p) => `
+    <div style="margin-bottom:8px;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:10px;padding:11px 13px;">
+        <div><div style="font-size:13px;font-weight:700;color:#fff;">${p.title}</div><div style="font-size:11px;color:#666;margin-top:1px;">${p.sub}</div></div>
+        <div style="font-size:11px;background:${p.badgeColor}22;color:${p.badgeColor};padding:3px 10px;border-radius:20px;flex-shrink:0;">${p.badge}</div>
+      </div>
+      <div style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 10px 10px;padding:12px;">
+        ${p.weeks.map(w=>`<div style="display:flex;justify-content:space-between;background:#252525;border-radius:7px;padding:7px 11px;margin-bottom:4px;"><span style="font-size:11px;color:#ccc;">${w.label}</span><span style="font-size:11px;font-weight:700;color:${p.noteColor};">${w.val}</span></div>`).join('')}
+        <div style="background:${p.noteBg};border-radius:8px;padding:9px 11px;margin:8px 0 6px;"><div style="font-size:11px;font-weight:700;color:${p.noteColor};margin-bottom:3px;">🎯 Objectif</div><div style="font-size:11px;color:#aaa;">${p.goal}</div></div>
+        <div style="background:#1E1E2E;border-radius:8px;padding:9px 11px;"><div style="font-size:11px;font-weight:700;color:#818cf8;margin-bottom:5px;">💡 Key Notes</div>${p.notes.map(n=>`<div style="font-size:11px;color:#aaa;line-height:1.6;">• ${n}</div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── TRACKER ──
+const DAYS_T = {
+  lundi:    {label:'Lundi — Upper Push',color:'#F97316',exercises:['Bench Press','Incline Dumbbell Press','Overhead Press','Lateral Raises','Tricep Pushdown','Skull Crushers']},
+  mercredi: {label:'Mercredi — Lower Body',color:'#3B82F6',exercises:['Squat','Romanian Deadlift','Leg Press','Walking Lunges','Leg Curl','Calf Raises']},
+  vendredi: {label:'Vendredi — Upper Pull',color:'#F97316',exercises:['Pull-ups / Lat Pulldown','Barbell Row','Seated Cable Row','Face Pulls','Dumbbell Curl','Hammer Curl']},
+  samedi:   {label:'Samedi — Full Body',color:'#22C55E',exercises:['Deadlift','Dumbbell Press','Cable Row','Plank (sec)','Ab Wheel']},
+};
+let currentWeek=1,currentTrackerDay='lundi',currentFilter='all',chartDay='lundi',chartMetric='weight';
+
+function changeWeek(dir){currentWeek=Math.max(1,currentWeek+dir);document.getElementById('weekLabel').textContent='Semaine '+currentWeek;renderLog();}
+
+function selectTrackerDay(day){
+  currentTrackerDay=day;
+  Object.keys(DAYS_T).forEach(d=>{
+    const btn=document.getElementById('tab-'+d);if(!btn)return;
+    const ia=d===day;
+    btn.style.border=ia?'1px solid '+DAYS_T[d].color:'1px solid #333';
+    btn.style.background=ia?DAYS_T[d].color+'22':'#1A1A1A';
+    btn.style.color=ia?DAYS_T[d].color:'#666';
+  });
+  renderLog();
+}
+
+function renderLog(){
+  const day=DAYS_T[currentTrackerDay];
+  const key='w'+currentWeek+'_'+currentTrackerDay;
+  const saved=JSON.parse(localStorage.getItem(key)||'{}');
+  let html=`<div style="font-size:12px;font-weight:700;color:${day.color};margin-bottom:10px;">${day.label}</div><div style="display:flex;flex-direction:column;gap:7px;">`;
+  day.exercises.forEach((ex,i)=>{
+    const s=saved[i]||{weight:'',reps:''};
+    let prev={};try{prev=JSON.parse(localStorage.getItem('w'+(currentWeek-1)+'_'+currentTrackerDay)||'{}');}catch(e){}
+    html+=`<div style="background:#222;border-radius:9px;padding:9px 11px;"><div style="font-size:12px;color:#ccc;margin-bottom:7px;">${ex}</div>
+    <div style="display:flex;gap:7px;">
+      <div style="flex:1;"><div style="font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;">Poids</div><input type="number" id="w_${i}" value="${s.weight}" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:700;padding:7px;text-align:center;"></div>
+      <div style="flex:1;"><div style="font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;">Reps</div><input type="number" id="r_${i}" value="${s.reps}" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:700;padding:7px;text-align:center;"></div>
+    </div>`;
+    if(prev[i]&&prev[i].weight){
+      const diff=s.weight&&prev[i].weight?parseFloat(s.weight)-parseFloat(prev[i].weight):null;
+      const col=diff>0?'#22C55E':diff<0?'#EF4444':'#888';
+      html+=`<div style="font-size:10px;color:#555;margin-top:5px;">Sem. précédente: <span style="color:#888;">${prev[i].weight} × ${prev[i].reps}</span>${diff!==null?` <span style="color:${col};font-weight:700;">${diff>0?'↑':diff<0?'↓':'→'} ${Math.abs(diff)}</span>`:''}</div>`;
     }
+    html+=`</div>`;
+  });
+  document.getElementById('exerciseLog').innerHTML=html+'</div>';
+}
 
-    // ─── TRACKER ───
-    const DAYS = {
-      lundi:    { label: 'Lundi — Upper Push', color: '#F97316', exercises: ['Bench Press','Incline Dumbbell Press','Overhead Press','Lateral Raises','Tricep Pushdown','Skull Crushers'] },
-      mercredi: { label: 'Mercredi — Lower Body', color: '#3B82F6', exercises: ['Squat','Romanian Deadlift','Leg Press','Walking Lunges','Leg Curl','Calf Raises'] },
-      vendredi: { label: 'Vendredi — Upper Pull', color: '#F97316', exercises: ['Pull-ups / Lat Pulldown','Barbell Row','Seated Cable Row','Face Pulls','Dumbbell Curl','Hammer Curl'] },
-      samedi:   { label: 'Samedi — Full Body', color: '#22C55E', exercises: ['Deadlift','Dumbbell Press','Cable Row','Plank (sec)','Ab Wheel'] },
-    };
+function saveLog(){
+  const day=DAYS_T[currentTrackerDay],key='w'+currentWeek+'_'+currentTrackerDay,data={};
+  day.exercises.forEach((ex,i)=>{data[i]={weight:document.getElementById('w_'+i).value,reps:document.getElementById('r_'+i).value,exercise:ex};});
+  localStorage.setItem(key,JSON.stringify(data));
+  const msg=document.getElementById('saveMsg');msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);
+  renderHistory();renderChart();
+}
 
-    let currentWeek = 1;
-    let currentDay = 'lundi';
-    let currentFilter = 'all';
+function filterHistory(f){
+  currentFilter=f;
+  ['all','lundi','mercredi','vendredi','samedi'].forEach(k=>{
+    const btn=document.getElementById('filter-'+k);if(!btn)return;
+    const ia=k===f,col=k==='all'?'#F97316':(DAYS_T[k]?DAYS_T[k].color:'#F97316');
+    btn.style.border=ia?'1px solid '+col:'1px solid #333';btn.style.background=ia?col+'22':'#1A1A1A';btn.style.color=ia?col:'#666';
+  });
+  renderHistory();
+}
 
-    function changeWeek(dir) {
-      currentWeek = Math.max(1, currentWeek + dir);
-      document.getElementById('weekLabel').textContent = 'Semaine ' + currentWeek;
-      renderLog();
+function renderHistory(){
+  const entries=[];
+  for(let w=1;w<=52;w++){Object.keys(DAYS_T).forEach(day=>{
+    if(currentFilter!=='all'&&currentFilter!==day)return;
+    try{const raw=localStorage.getItem('w'+w+'_'+day);if(!raw)return;const p=JSON.parse(raw);if(Object.values(p).some(v=>v.weight||v.reps))entries.push({week:w,day,data:p});}catch(e){}
+  });}
+  if(!entries.length){document.getElementById('historyLog').innerHTML='<div style="text-align:center;color:#444;font-size:13px;padding:20px 0;">Aucune séance encore. 💪</div>';return;}
+  entries.sort((a,b)=>b.week-a.week);
+  let html='<div style="display:flex;flex-direction:column;gap:8px;">';
+  entries.forEach(e=>{
+    const d=DAYS_T[e.day];
+    html+=`<div style="background:#222;border-radius:9px;overflow:hidden;"><div style="display:flex;justify-content:space-between;padding:9px 13px;border-bottom:1px solid #2A2A2A;"><span style="font-size:12px;font-weight:700;color:${d.color};">${d.label}</span><span style="font-size:11px;background:${d.color}22;color:${d.color};padding:2px 9px;border-radius:20px;">Sem. ${e.week}</span></div><div style="padding:9px 13px;display:flex;flex-direction:column;gap:3px;">`;
+    Object.values(e.data).forEach(ex=>{if(!ex.weight&&!ex.reps)return;html+=`<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:#888;">${ex.exercise}</span><span style="font-size:12px;font-weight:700;color:#fff;">${ex.weight||'—'} × ${ex.reps||'—'}</span></div>`;});
+    html+=`</div></div>`;
+  });
+  document.getElementById('historyLog').innerHTML=html+'</div>';
+}
+
+function setChartDay(day){
+  chartDay=day;
+  Object.keys(DAYS_T).forEach(d=>{const btn=document.getElementById('ctab-'+d);if(!btn)return;const ia=d===day;btn.style.border=ia?'1px solid '+DAYS_T[d].color:'1px solid #333';btn.style.background=ia?DAYS_T[d].color+'22':'#1A1A1A';btn.style.color=ia?DAYS_T[d].color:'#666';});
+  populateExerciseDropdown();renderChart();
+}
+function setChartMetric(m){
+  chartMetric=m;
+  ['weight','reps','volume'].forEach(k=>{const btn=document.getElementById('cmet-'+k);if(!btn)return;const ia=k===m;btn.style.border=ia?'1px solid #3B82F6':'1px solid #333';btn.style.background=ia?'#3B82F622':'#1A1A1A';btn.style.color=ia?'#3B82F6':'#666';});
+  renderChart();
+}
+function populateExerciseDropdown(){const sel=document.getElementById('chartExercise');if(!sel)return;sel.innerHTML=(DAYS_T[chartDay]?DAYS_T[chartDay].exercises:[]).map((ex,i)=>`<option value="${i}">${ex}</option>`).join('');}
+function getChartData(){
+  const sel=document.getElementById('chartExercise');if(!sel||sel.value==='')return[];
+  const exIdx=parseInt(sel.value);if(isNaN(exIdx))return[];
+  const points=[];
+  for(let w=1;w<=52;w++){try{const raw=localStorage.getItem('w'+w+'_'+chartDay);if(!raw)continue;const p=JSON.parse(raw);const ex=p[exIdx];if(!ex)continue;const wt=parseFloat(ex.weight)||0,reps=parseFloat(ex.reps)||0;const val=chartMetric==='weight'?wt:chartMetric==='reps'?reps:wt*reps;if(val>0)points.push({week:w,val});}catch(e){}}
+  return points;
+}
+function renderChart(){
+  const canvas=document.getElementById('progressChart'),emptyMsg=document.getElementById('chartEmpty'),statsDiv=document.getElementById('chartStats');
+  if(!canvas||!emptyMsg||!statsDiv)return;
+  let pts=[];try{pts=getChartData();}catch(e){}
+  const color=(DAYS_T[chartDay]&&DAYS_T[chartDay].color)?DAYS_T[chartDay].color:'#F97316';
+  if(pts.length<2){emptyMsg.style.display='flex';canvas.style.display='none';statsDiv.innerHTML='';return;}
+  emptyMsg.style.display='none';canvas.style.display='block';
+  const cont=canvas.parentElement,W=Math.max(cont.clientWidth-44,100),H=Math.max(cont.clientHeight-40,80);
+  canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
+  const vals=pts.map(p=>p.val),minV=Math.min(...vals)*0.9,maxV=Math.max(...vals)*1.05;
+  const minW=Math.min(...pts.map(p=>p.week)),maxW=Math.max(...pts.map(p=>p.week)),wR=maxW-minW||1,vR=maxV-minV||1;
+  const toX=w=>((w-minW)/wR)*(W-20)+10,toY=v=>H-((v-minV)/vR)*(H-10)-5;
+  ctx.strokeStyle='#2A2A2A';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=(H/4)*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.fillStyle='#555';ctx.font='9px sans-serif';ctx.textAlign='right';ctx.fillText((maxV-(vR/4)*i).toFixed(0),-2,y+3);}
+  const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,color+'44');grad.addColorStop(1,color+'00');
+  ctx.beginPath();ctx.moveTo(toX(pts[0].week),toY(pts[0].val));pts.forEach(p=>ctx.lineTo(toX(p.week),toY(p.val)));
+  ctx.lineTo(toX(pts[pts.length-1].week),H);ctx.lineTo(toX(pts[0].week),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.lineCap='round';
+  pts.forEach((p,i)=>i===0?ctx.moveTo(toX(p.week),toY(p.val)):ctx.lineTo(toX(p.week),toY(p.val)));ctx.stroke();
+  const mxV=Math.max(...vals);
+  pts.forEach((p,i)=>{const x=toX(p.week),y=toY(p.val);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#555';ctx.font='9px sans-serif';ctx.textAlign='center';ctx.fillText('S'+p.week,x,H+14);if(i===0||i===pts.length-1||p.val===mxV){ctx.fillStyle='#fff';ctx.font='bold 10px sans-serif';ctx.fillText(p.val.toFixed(0),x,y-8);}});
+  const first=pts[0].val,last=pts[pts.length-1].val,diff=last-first,pct=first>0?((diff/first)*100).toFixed(1):'0.0',arrow=diff>=0?'↑':'↓',dc=diff>=0?'#22C55E':'#EF4444',ml=chartMetric==='weight'?'lbs/kg':chartMetric==='reps'?'reps':'vol';
+  statsDiv.innerHTML=`<div style="flex:1;background:#222;border-radius:9px;padding:8px;text-align:center;"><div style="font-size:9px;color:#555;">Départ</div><div style="font-size:14px;font-weight:800;color:#fff;">${first.toFixed(0)} <span style="font-size:9px;color:#666;">${ml}</span></div></div><div style="flex:1;background:#222;border-radius:9px;padding:8px;text-align:center;"><div style="font-size:9px;color:#555;">Actuel</div><div style="font-size:14px;font-weight:800;color:#fff;">${last.toFixed(0)} <span style="font-size:9px;color:#666;">${ml}</span></div></div><div style="flex:1;background:#222;border-radius:9px;padding:8px;text-align:center;"><div style="font-size:9px;color:#555;">Progression</div><div style="font-size:14px;font-weight:800;color:${dc};">${arrow} ${Math.abs(diff).toFixed(0)} <span style="font-size:9px;">(${pct}%)</span></div></div>`;
+}
+
+// ── INIT ──
+Object.keys(DAY_CONFIGS).forEach(dk=>{renderMeals(dk);renderMacroDash(dk);});
+renderPhases();
+selectTrackerDay('lundi');
+renderHistory();
+setChartDay('lundi');
+populateExerciseDropdown();
+renderChart();
+
+// ── INJECT EXTRAS INTO EACH DAY PAGE ──
+// After meals, each day gets: weekly tracker log, progression chart, full history, phases + keynotes
+
+const GYM_DAYS = { lun:'lundi', mer:'mercredi', ven:'vendredi', sam:'samedi' };
+const ALL_DAY_PAGES = ['lun','mar','mer','jeu','ven','sam','dim'];
+
+function buildTrackerForDay(dk) {
+  const gymKey = GYM_DAYS[dk];
+  // For non-gym days (mar, jeu, dim) show read-only history only
+  const isGym = !!gymKey;
+
+  let html = `<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:12px;">📈 Logger ma séance`;
+
+  if (!isGym) {
+    html += ` <span style="color:#444;font-weight:400;">(pas de gym ce jour)</span>`;
+  }
+  html += `</div>`;
+
+  if (isGym) {
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:11px;color:#666;">Semaine</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="dayChangeWeek('${dk}',-1)" style="background:#222;border:1px solid #333;color:#fff;width:28px;height:28px;border-radius:8px;font-size:15px;cursor:pointer;">‹</button>
+        <span id="${dk}-weekLabel" style="font-size:15px;font-weight:800;color:#fff;min-width:76px;text-align:center;">Semaine 1</span>
+        <button onclick="dayChangeWeek('${dk}',1)" style="background:#222;border:1px solid #333;color:#fff;width:28px;height:28px;border-radius:8px;font-size:15px;cursor:pointer;">›</button>
+      </div>
+    </div>
+    <div id="${dk}-exerciseLog" style="margin-bottom:10px;"></div>
+    <button onclick="dayLogSave('${dk}')" style="width:100%;padding:12px;background:#22C55E;border:none;border-radius:11px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;">💾 Sauvegarder la séance</button>
+    <div id="${dk}-saveMsg" style="text-align:center;font-size:12px;color:#22C55E;margin-top:7px;display:none;">✅ Séance sauvegardée!</div>`;
+  } else {
+    html += `<div style="font-size:12px;color:#444;text-align:center;padding:12px 0;">Pas d'entraînement gym ce jour. Consulte l'historique ci-dessous.</div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function buildChartForDay(dk) {
+  const gymKey = GYM_DAYS[dk];
+  if (!gymKey) return '';
+  const color = DAYS_T[gymKey] ? DAYS_T[gymKey].color : '#F97316';
+  const exercises = DAYS_T[gymKey] ? DAYS_T[gymKey].exercises : [];
+
+  return `<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:12px;">📊 Graphique d'Évolution</div>
+    <div style="margin-bottom:8px;">
+      <select id="${dk}-chartEx" onchange="dayRenderChart('${dk}')" style="width:100%;background:#222;border:1px solid #333;color:#fff;font-size:12px;padding:8px 11px;border-radius:9px;font-weight:600;">
+        ${exercises.map((ex,i)=>`<option value="${i}">${ex}</option>`).join('')}
+      </select>
+    </div>
+    <div style="display:flex;gap:5px;margin-bottom:10px;">
+      <button onclick="daySetMetric('${dk}','weight')" id="${dk}-cmet-weight" style="flex:1;padding:6px;border-radius:9px;border:1px solid #3B82F6;background:#3B82F622;color:#3B82F6;font-size:11px;font-weight:700;cursor:pointer;">Poids</button>
+      <button onclick="daySetMetric('${dk}','reps')" id="${dk}-cmet-reps" style="flex:1;padding:6px;border-radius:9px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">Reps</button>
+      <button onclick="daySetMetric('${dk}','volume')" id="${dk}-cmet-volume" style="flex:1;padding:6px;border-radius:9px;border:1px solid #333;background:#1A1A1A;color:#666;font-size:11px;font-weight:700;cursor:pointer;">Volume</button>
+    </div>
+    <div style="position:relative;width:100%;height:190px;background:#111;border-radius:11px;overflow:hidden;padding:10px 6px 26px 34px;">
+      <canvas id="${dk}-chart" style="width:100%;height:100%;display:none;"></canvas>
+      <div id="${dk}-chartEmpty" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;text-align:center;padding:16px;">Aucune donnée — commence à logger!</div>
+    </div>
+    <div id="${dk}-chartStats" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;"></div>
+  </div>`;
+}
+
+function buildHistoryForDay(dk) {
+  const gymKey = GYM_DAYS[dk];
+  const filterDay = gymKey || null;
+
+  return `<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:10px;">📋 Historique ${gymKey ? DAYS_T[gymKey].label : 'Général'}</div>
+    <div id="${dk}-histLog"><div style="text-align:center;color:#444;font-size:12px;padding:16px 0;">Aucune séance encore. 💪</div></div>
+  </div>`;
+}
+
+function buildPhasesForDay() {
+  return `<div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:14px;padding:14px;margin-bottom:12px;">
+    <div style="font-size:10px;letter-spacing:0.12em;color:#555;text-transform:uppercase;margin-bottom:12px;">🏁 Phases — Half-Ironman Été 2027</div>
+    <div id="phases-inline"></div>
+  </div>`;
+}
+
+// Per-day state
+const dayWeeks = {lun:1,mer:1,ven:1,sam:1};
+const dayMetrics = {lun:'weight',mer:'weight',ven:'weight',sam:'weight'};
+
+function dayChangeWeek(dk, dir) {
+  if (!dayWeeks[dk]) dayWeeks[dk]=1;
+  dayWeeks[dk] = Math.max(1, dayWeeks[dk]+dir);
+  const lbl = document.getElementById(dk+'-weekLabel');
+  if (lbl) lbl.textContent = 'Semaine '+dayWeeks[dk];
+  dayRenderLog(dk);
+}
+
+function dayRenderLog(dk) {
+  const gymKey = GYM_DAYS[dk];
+  if (!gymKey) return;
+  const day = DAYS_T[gymKey];
+  const week = dayWeeks[dk]||1;
+  const key = 'w'+week+'_'+gymKey;
+  const saved = JSON.parse(localStorage.getItem(key)||'{}');
+  let html = `<div style="font-size:11px;font-weight:700;color:${day.color};margin-bottom:8px;">${day.label} — Sem. ${week}</div><div style="display:flex;flex-direction:column;gap:6px;">`;
+  day.exercises.forEach((ex,i)=>{
+    const s = saved[i]||{weight:'',reps:''};
+    let prev={};try{prev=JSON.parse(localStorage.getItem('w'+(week-1)+'_'+gymKey)||'{}');}catch(e){}
+    html+=`<div style="background:#222;border-radius:9px;padding:9px 11px;">
+      <div style="font-size:12px;color:#ccc;margin-bottom:6px;">${ex}</div>
+      <div style="display:flex;gap:7px;">
+        <div style="flex:1;"><div style="font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;">Poids</div>
+        <input type="number" id="${dk}-w_${i}" value="${s.weight}" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:700;padding:7px;text-align:center;"></div>
+        <div style="flex:1;"><div style="font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;">Reps</div>
+        <input type="number" id="${dk}-r_${i}" value="${s.reps}" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:7px;color:#fff;font-size:14px;font-weight:700;padding:7px;text-align:center;"></div>
+      </div>`;
+    if(prev[i]&&prev[i].weight){
+      const diff=s.weight&&prev[i].weight?parseFloat(s.weight)-parseFloat(prev[i].weight):null;
+      const col=diff>0?'#22C55E':diff<0?'#EF4444':'#888';
+      html+=`<div style="font-size:10px;color:#555;margin-top:4px;">Sem. préc: <span style="color:#888;">${prev[i].weight} × ${prev[i].reps}</span>${diff!==null?` <span style="color:${col};font-weight:700;">${diff>0?'↑':diff<0?'↓':'→'} ${Math.abs(diff)}</span>`:''}</div>`;
     }
+    html+=`</div>`;
+  });
+  const logEl = document.getElementById(dk+'-exerciseLog');
+  if (logEl) logEl.innerHTML = html+'</div>';
+}
 
-    function selectDay(day) {
-      currentDay = day;
-      Object.keys(DAYS).forEach(d => {
-        const tab = document.getElementById('tab-' + d);
-        const isActive = d === day;
-        tab.style.border = isActive ? '1px solid ' + DAYS[d].color : '1px solid #333';
-        tab.style.background = isActive ? DAYS[d].color + '22' : '#1A1A1A';
-        tab.style.color = isActive ? DAYS[d].color : '#666';
-      });
-      renderLog();
-    }
+function dayLogSave(dk) {
+  const gymKey = GYM_DAYS[dk];
+  if (!gymKey) return;
+  const day = DAYS_T[gymKey];
+  const week = dayWeeks[dk]||1;
+  const key = 'w'+week+'_'+gymKey;
+  const data={};
+  day.exercises.forEach((ex,i)=>{
+    data[i]={weight:document.getElementById(dk+'-w_'+i).value,reps:document.getElementById(dk+'-r_'+i).value,exercise:ex};
+  });
+  localStorage.setItem(key,JSON.stringify(data));
+  const msg=document.getElementById(dk+'-saveMsg');
+  if(msg){msg.style.display='block';setTimeout(()=>msg.style.display='none',2000);}
+  dayRenderHistory(dk);
+  dayRenderChart(dk);
+  // also refresh global tracker
+  renderHistory();renderChart();
+}
 
-    function renderLog() {
-      const day = DAYS[currentDay];
-      const key = 'w' + currentWeek + '_' + currentDay;
-      const saved = JSON.parse(localStorage.getItem(key) || '{}');
-      let html = '<div style="font-size:12px;font-weight:700;color:' + day.color + ';margin-bottom:12px;">' + day.label + '</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
-      day.exercises.forEach((ex, i) => {
-        const s = saved[i] || { weight: '', reps: '' };
-        html += '<div style="background:#222;border-radius:10px;padding:10px 12px;">';
-        html += '<div style="font-size:12px;color:#ccc;margin-bottom:8px;">' + ex + '</div>';
-        html += '<div style="display:flex;gap:8px;">';
-        html += '<div style="flex:1;">';
-        html += '<div style="font-size:10px;color:#555;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">Poids (lbs/kg)</div>';
-        html += '<input type="number" id="w_' + i + '" value="' + s.weight + '" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;font-weight:700;padding:8px 10px;text-align:center;">';
-        html += '</div>';
-        html += '<div style="flex:1;">';
-        html += '<div style="font-size:10px;color:#555;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.1em;">Reps</div>';
-        html += '<input type="number" id="r_' + i + '" value="' + s.reps + '" placeholder="0" style="width:100%;background:#1A1A1A;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;font-weight:700;padding:8px 10px;text-align:center;">';
-        html += '</div>';
-        html += '</div>';
-        // Show previous week
-        const prevKey = 'w' + (currentWeek - 1) + '_' + currentDay;
-        const prev = JSON.parse(localStorage.getItem(prevKey) || '{}');
-        if (prev[i] && prev[i].weight) {
-          const diff = s.weight && prev[i].weight ? (parseFloat(s.weight) - parseFloat(prev[i].weight)) : null;
-          const arrow = diff > 0 ? '↑' : diff < 0 ? '↓' : '→';
-          const col = diff > 0 ? '#22C55E' : diff < 0 ? '#EF4444' : '#888';
-          html += '<div style="font-size:10px;color:#555;margin-top:6px;">Sem. précédente: <span style="color:#888;">' + prev[i].weight + ' × ' + prev[i].reps + '</span>';
-          if (diff !== null) html += ' <span style="color:' + col + ';font-weight:700;">' + arrow + ' ' + Math.abs(diff) + '</span>';
-          html += '</div>';
-        }
-        html += '</div>';
-      });
-      html += '</div>';
-      document.getElementById('exerciseLog').innerHTML = html;
-    }
+function daySetMetric(dk, metric) {
+  dayMetrics[dk] = metric;
+  ['weight','reps','volume'].forEach(m=>{
+    const btn=document.getElementById(dk+'-cmet-'+m);if(!btn)return;
+    const ia=m===metric;
+    btn.style.border=ia?'1px solid #3B82F6':'1px solid #333';
+    btn.style.background=ia?'#3B82F622':'#1A1A1A';
+    btn.style.color=ia?'#3B82F6':'#666';
+  });
+  dayRenderChart(dk);
+}
 
-    function saveLog() {
-      const day = DAYS[currentDay];
-      const key = 'w' + currentWeek + '_' + currentDay;
-      const data = {};
-      day.exercises.forEach((ex, i) => {
-        data[i] = {
-          weight: document.getElementById('w_' + i).value,
-          reps: document.getElementById('r_' + i).value,
-          exercise: ex
-        };
-      });
-      localStorage.setItem(key, JSON.stringify(data));
-      const msg = document.getElementById('saveMsg');
-      msg.style.display = 'block';
-      setTimeout(() => msg.style.display = 'none', 2000);
-      renderHistory();
-    }
+function dayRenderChart(dk) {
+  const gymKey = GYM_DAYS[dk];
+  if (!gymKey) return;
+  const canvas=document.getElementById(dk+'-chart');
+  const emptyMsg=document.getElementById(dk+'-chartEmpty');
+  const statsDiv=document.getElementById(dk+'-chartStats');
+  if(!canvas||!emptyMsg||!statsDiv) return;
+  const sel=document.getElementById(dk+'-chartEx');
+  if(!sel||sel.value===''){emptyMsg.style.display='flex';canvas.style.display='none';return;}
+  const exIdx=parseInt(sel.value);
+  const metric=dayMetrics[dk]||'weight';
+  const color=DAYS_T[gymKey].color;
+  const pts=[];
+  for(let w=1;w<=52;w++){
+    try{const raw=localStorage.getItem('w'+w+'_'+gymKey);if(!raw)continue;
+    const p=JSON.parse(raw);const ex=p[exIdx];if(!ex)continue;
+    const wt=parseFloat(ex.weight)||0,reps=parseFloat(ex.reps)||0;
+    const val=metric==='weight'?wt:metric==='reps'?reps:wt*reps;
+    if(val>0)pts.push({week:w,val});}catch(e){}
+  }
+  if(pts.length<2){emptyMsg.style.display='flex';canvas.style.display='none';statsDiv.innerHTML='';return;}
+  emptyMsg.style.display='none';canvas.style.display='block';
+  const cont=canvas.parentElement,W=Math.max(cont.clientWidth-40,80),H=Math.max(cont.clientHeight-36,60);
+  canvas.width=W;canvas.height=H;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,W,H);
+  const vals=pts.map(p=>p.val),minV=Math.min(...vals)*0.9,maxV=Math.max(...vals)*1.05;
+  const minW=Math.min(...pts.map(p=>p.week)),maxW=Math.max(...pts.map(p=>p.week)),wR=maxW-minW||1,vR=maxV-minV||1;
+  const toX=w=>((w-minW)/wR)*(W-16)+8,toY=v=>H-((v-minV)/vR)*(H-8)-4;
+  ctx.strokeStyle='#2A2A2A';ctx.lineWidth=1;
+  for(let i=0;i<=3;i++){const y=(H/3)*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();ctx.fillStyle='#555';ctx.font='8px sans-serif';ctx.textAlign='right';ctx.fillText((maxV-(vR/3)*i).toFixed(0),-1,y+3);}
+  const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,color+'44');grad.addColorStop(1,color+'00');
+  ctx.beginPath();ctx.moveTo(toX(pts[0].week),toY(pts[0].val));pts.forEach(p=>ctx.lineTo(toX(p.week),toY(p.val)));
+  ctx.lineTo(toX(pts[pts.length-1].week),H);ctx.lineTo(toX(pts[0].week),H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin='round';ctx.lineCap='round';
+  pts.forEach((p,i)=>i===0?ctx.moveTo(toX(p.week),toY(p.val)):ctx.lineTo(toX(p.week),toY(p.val)));ctx.stroke();
+  const mxV=Math.max(...vals);
+  pts.forEach((p,i)=>{const x=toX(p.week),y=toY(p.val);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.strokeStyle='#111';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='#555';ctx.font='8px sans-serif';ctx.textAlign='center';ctx.fillText('S'+p.week,x,H+13);if(i===0||i===pts.length-1||p.val===mxV){ctx.fillStyle='#fff';ctx.font='bold 9px sans-serif';ctx.fillText(p.val.toFixed(0),x,y-6);}});
+  const first=pts[0].val,last=pts[pts.length-1].val,diff=last-first,pct=first>0?((diff/first)*100).toFixed(1):'0.0',arrow=diff>=0?'↑':'↓',dc=diff>=0?'#22C55E':'#EF4444',ml=metric==='weight'?'lbs/kg':metric==='reps'?'reps':'vol';
+  statsDiv.innerHTML=`<div style="flex:1;background:#222;border-radius:8px;padding:7px;text-align:center;"><div style="font-size:9px;color:#555;">Départ</div><div style="font-size:13px;font-weight:800;color:#fff;">${first.toFixed(0)}<span style="font-size:9px;color:#666;"> ${ml}</span></div></div><div style="flex:1;background:#222;border-radius:8px;padding:7px;text-align:center;"><div style="font-size:9px;color:#555;">Actuel</div><div style="font-size:13px;font-weight:800;color:#fff;">${last.toFixed(0)}<span style="font-size:9px;color:#666;"> ${ml}</span></div></div><div style="flex:1;background:#222;border-radius:8px;padding:7px;text-align:center;"><div style="font-size:9px;color:#555;">Progression</div><div style="font-size:13px;font-weight:800;color:${dc};">${arrow} ${Math.abs(diff).toFixed(0)}<span style="font-size:9px;"> (${pct}%)</span></div></div>`;
+}
 
-    function filterHistory(f) {
-      currentFilter = f;
-      ['all','lundi','mercredi','vendredi','samedi'].forEach(k => {
-        const btn = document.getElementById('filter-' + k);
-        const isActive = k === f;
-        const col = k === 'all' ? '#F97316' : (DAYS[k] ? DAYS[k].color : '#F97316');
-        btn.style.border = isActive ? '1px solid ' + col : '1px solid #333';
-        btn.style.background = isActive ? col + '22' : '#1A1A1A';
-        btn.style.color = isActive ? col : '#666';
-      });
-      renderHistory();
-    }
+function dayRenderHistory(dk) {
+  const gymKey = GYM_DAYS[dk];
+  const logEl = document.getElementById(dk+'-histLog');
+  if(!logEl) return;
+  const entries=[];
+  const dayFilter = gymKey ? gymKey : null;
+  for(let w=1;w<=52;w++){
+    const days = dayFilter ? [dayFilter] : Object.keys(DAYS_T);
+    days.forEach(d=>{
+      try{const raw=localStorage.getItem('w'+w+'_'+d);if(!raw)return;const p=JSON.parse(raw);if(Object.values(p).some(v=>v.weight||v.reps))entries.push({week:w,day:d,data:p});}catch(e){}
+    });
+  }
+  if(!entries.length){logEl.innerHTML='<div style="text-align:center;color:#444;font-size:12px;padding:16px 0;">Aucune séance encore. 💪</div>';return;}
+  entries.sort((a,b)=>b.week-a.week);
+  let html='<div style="display:flex;flex-direction:column;gap:7px;">';
+  entries.slice(0,10).forEach(e=>{
+    const d=DAYS_T[e.day];
+    html+=`<div style="background:#222;border-radius:8px;overflow:hidden;"><div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #2A2A2A;"><span style="font-size:11px;font-weight:700;color:${d.color};">${d.label}</span><span style="font-size:10px;background:${d.color}22;color:${d.color};padding:2px 8px;border-radius:16px;">Sem. ${e.week}</span></div><div style="padding:8px 12px;display:flex;flex-direction:column;gap:3px;">`;
+    Object.values(e.data).forEach(ex=>{if(!ex.weight&&!ex.reps)return;html+=`<div style="display:flex;justify-content:space-between;"><span style="font-size:11px;color:#888;">${ex.exercise}</span><span style="font-size:11px;font-weight:700;color:#fff;">${ex.weight||'—'} × ${ex.reps||'—'}</span></div>`;});
+    html+=`</div></div>`;
+  });
+  if(entries.length>10) html+=`<div style="text-align:center;font-size:11px;color:#555;padding:8px;">+${entries.length-10} séances — voir onglet 📈 pour tout l'historique</div>`;
+  logEl.innerHTML=html+'</div>';
+}
 
-    function renderHistory() {
-      const entries = [];
-      for (let w = 1; w <= 52; w++) {
-        Object.keys(DAYS).forEach(day => {
-          if (currentFilter !== 'all' && currentFilter !== day) return;
-          const key = 'w' + w + '_' + day;
-          const data = localStorage.getItem(key);
-          if (data) {
-            const parsed = JSON.parse(data);
-            const hasData = Object.values(parsed).some(v => v.weight || v.reps);
-            if (hasData) entries.push({ week: w, day, data: parsed });
-          }
-        });
-      }
+function renderPhasesInline() {
+  const c = document.getElementById('phases-inline');
+  if(!c) return;
+  c.innerHTML = PHASES.map(p=>`
+    <div style="margin-bottom:7px;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:9px;padding:10px 12px;">
+        <div><div style="font-size:12px;font-weight:700;color:#fff;">${p.title}</div><div style="font-size:10px;color:#666;margin-top:1px;">${p.sub}</div></div>
+        <div style="font-size:10px;background:${p.badgeColor}22;color:${p.badgeColor};padding:2px 9px;border-radius:16px;flex-shrink:0;">${p.badge}</div>
+      </div>
+      <div style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 9px 9px;padding:11px;">
+        ${p.weeks.map(w=>`<div style="display:flex;justify-content:space-between;background:#252525;border-radius:6px;padding:6px 10px;margin-bottom:3px;"><span style="font-size:11px;color:#ccc;">${w.label}</span><span style="font-size:11px;font-weight:700;color:${p.noteColor};">${w.val}</span></div>`).join('')}
+        <div style="background:${p.noteBg};border-radius:7px;padding:8px 10px;margin:7px 0 5px;"><div style="font-size:10px;font-weight:700;color:${p.noteColor};margin-bottom:2px;">🎯 ${p.goal}</div></div>
+        <div style="background:#1E1E2E;border-radius:7px;padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:#818cf8;margin-bottom:4px;">💡 Key Notes</div>${p.notes.map(n=>`<div style="font-size:10px;color:#aaa;line-height:1.6;">• ${n}</div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
 
-      if (entries.length === 0) {
-        document.getElementById('historyLog').innerHTML = '<div style="text-align:center;color:#444;font-size:13px;padding:20px 0;">Aucune séance enregistrée encore.<br>Commence à logger tes séances! 💪</div>';
-        return;
-      }
+// Inject all extras into each day page
+ALL_DAY_PAGES.forEach(dk => {
+  const page = document.getElementById('page-'+dk);
+  if (!page) return;
+  const div = document.createElement('div');
+  div.innerHTML =
+    buildTrackerForDay(dk) +
+    buildChartForDay(dk) +
+    buildHistoryForDay(dk) +
+    buildPhasesForDay();
+  page.appendChild(div);
+  // Init per-day state
+  if (GYM_DAYS[dk]) {
+    dayWeeks[dk] = 1;
+    dayMetrics[dk] = 'weight';
+    dayRenderLog(dk);
+    dayRenderChart(dk);
+    dayRenderHistory(dk);
+  } else {
+    dayRenderHistory(dk);
+  }
+});
 
-      entries.sort((a, b) => b.week - a.week || a.day.localeCompare(b.day));
-      let html = '<div style="display:flex;flex-direction:column;gap:10px;">';
-      entries.forEach(entry => {
-        const d = DAYS[entry.day];
-        html += '<div style="background:#222;border-radius:10px;overflow:hidden;">';
-        html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #2A2A2A;">';
-        html += '<span style="font-size:13px;font-weight:700;color:' + d.color + ';">' + d.label + '</span>';
-        html += '<span style="font-size:11px;background:' + d.color + '22;color:' + d.color + ';padding:3px 10px;border-radius:20px;">Sem. ' + entry.week + '</span>';
-        html += '</div>';
-        html += '<div style="padding:10px 14px;display:flex;flex-direction:column;gap:4px;">';
-        Object.values(entry.data).forEach(ex => {
-          if (!ex.weight && !ex.reps) return;
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-          html += '<span style="font-size:11px;color:#888;">' + ex.exercise + '</span>';
-          html += '<span style="font-size:12px;font-weight:700;color:#fff;">' + (ex.weight || '—') + ' × ' + (ex.reps || '—') + '</span>';
-          html += '</div>';
-        });
-        html += '</div></div>';
-      });
-      html += '</div>';
-      document.getElementById('historyLog').innerHTML = html;
-    }
-
-    // Init
-    selectDay('lundi');
-    renderHistory();
-  </script>
-
+// Render phases in all inline containers
+document.querySelectorAll('#phases-inline').forEach(el => {
+  el.innerHTML = PHASES.map(p=>`
+    <div style="margin-bottom:7px;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#222;border-radius:9px;padding:10px 12px;">
+        <div><div style="font-size:12px;font-weight:700;color:#fff;">${p.title}</div><div style="font-size:10px;color:#666;margin-top:1px;">${p.sub}</div></div>
+        <div style="font-size:10px;background:${p.badgeColor}22;color:${p.badgeColor};padding:2px 9px;border-radius:16px;flex-shrink:0;">${p.badge}</div>
+      </div>
+      <div style="display:none;background:#1E1E1E;border:1px solid #2A2A2A;border-radius:0 0 9px 9px;padding:11px;">
+        ${p.weeks.map(w=>`<div style="display:flex;justify-content:space-between;background:#252525;border-radius:6px;padding:6px 10px;margin-bottom:3px;"><span style="font-size:11px;color:#ccc;">${w.label}</span><span style="font-size:11px;font-weight:700;color:${p.noteColor};">${w.val}</span></div>`).join('')}
+        <div style="background:${p.noteBg};border-radius:7px;padding:8px 10px;margin:7px 0 5px;"><div style="font-size:10px;font-weight:700;color:${p.noteColor};margin-bottom:2px;">🎯 ${p.goal}</div></div>
+        <div style="background:#1E1E2E;border-radius:7px;padding:8px 10px;"><div style="font-size:10px;font-weight:700;color:#818cf8;margin-bottom:4px;">💡 Key Notes</div>${p.notes.map(n=>`<div style="font-size:10px;color:#aaa;line-height:1.6;">• ${n}</div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+});
+</script>
 </body>
 </html>
